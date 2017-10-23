@@ -1,0 +1,461 @@
+2017-10-07 22:44:55:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 22:48:47:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 22:52:04:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 22:52:39:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 22:53:38:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 23:00:32:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 23:46:27:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-07 23:50:28:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 01:59:36:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 01:59:39:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 02:00:04:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 02:00:14:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 02:15:23:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 02:15:58:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 21:12:26:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:28:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:29:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:31:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:32:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:34:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:35:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:37:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:38:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 21:12:42:WARNING: fa17-cs425-g48-01.cs.illinois.edu suspected failure
+2017-10-08 21:12:42:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:45:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:46:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:48:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:49:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:51:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:53:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:54:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:56:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:57:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:12:59:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:00:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:02:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:03:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:05:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:06:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:08:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:09:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:11:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:12:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:14:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:15:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:13:15:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:16:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:13:17:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:18:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:13:19:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:20:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:13:21:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:23:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:24:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:26:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:27:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:29:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:30:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:32:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:33:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:35:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:36:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:38:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:40:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:42:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:44:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:45:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:13:46:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:47:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:13:49:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:14:18:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:14:25:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 21:18:51:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 21:21:03:WARNING: fa17-cs425-g48-08.cs.illinois.edu failed
+2017-10-08 21:21:14:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 21:50:16:WARNING: fa17-cs425-g48-09.cs.illinois.edu suspected failure
+2017-10-08 21:50:17:WARNING: fa17-cs425-g48-09.cs.illinois.edu failed
+2017-10-08 21:50:30:WARNING: fa17-cs425-g48-09.cs.illinois.edu suspected failure
+2017-10-08 21:50:31:WARNING: fa17-cs425-g48-09.cs.illinois.edu failed
+2017-10-08 21:50:35:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 21:51:14:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 21:55:32:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:55:33:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:57:37:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:57:42:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:57:44:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:57:47:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 21:58:48:WARNING: fa17-cs425-g48-03.cs.illinois.edu failed
+2017-10-08 21:59:10:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:12:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:59:14:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:59:16:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:17:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:59:18:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:19:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:59:20:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:21:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:21:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:22:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:23:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 21:59:24:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 21:59:25:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 22:00:01:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 22:00:02:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:03:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:03:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:03:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:03:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:04:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:04:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:04:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:04:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:05:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:05:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:05:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:05:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:06:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:06:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:06:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:06:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:07:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:07:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:08:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:08:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:08:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:08:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:09:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:09:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:09:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:09:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:10:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:10:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:10:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:10:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:11:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:11:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:12:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:12:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:12:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:12:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:13:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:13:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:13:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:13:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:14:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:14:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:14:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 22:00:14:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 22:00:15:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-08 22:00:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 22:00:16:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 22:00:48:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:00:50:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:00:52:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:00:54:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:00:56:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:00:58:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:01:00:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:01:02:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 22:01:03:WARNING: fa17-cs425-g48-03.cs.illinois.edu failed
+2017-10-08 22:01:06:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:01:07:WARNING: fa17-cs425-g48-06.cs.illinois.edu suspected failure
+2017-10-08 22:01:08:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 22:01:19:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-08 22:58:28:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 23:04:46:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-08 23:04:47:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-08 23:04:48:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-08 23:05:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-08 23:05:08:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-08 23:05:09:WARNING: fa17-cs425-g48-02.cs.illinois.edu failed
+2017-10-08 23:05:11:WARNING: fa17-cs425-g48-01.cs.illinois.edu suspected failure
+2017-10-08 23:05:12:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:12:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:12:WARNING: fa17-cs425-g48-01.cs.illinois.edu failed
+2017-10-08 23:05:14:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:14:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:16:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:16:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:18:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:18:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:20:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:21:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:23:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:23:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:25:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:25:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:27:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:27:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:29:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:29:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:30:WARNING: fa17-cs425-g48-09.cs.illinois.edu failed
+2017-10-08 23:05:31:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:31:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:33:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:33:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:36:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:36:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:38:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:38:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:40:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:40:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:42:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:42:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:44:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:44:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:05:46:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-08 23:05:46:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-08 23:06:29:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 23:06:31:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-08 23:06:32:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 23:06:37:WARNING: fa17-cs425-g48-09.cs.illinois.edu failed
+2017-10-08 23:06:37:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-08 23:06:37:WARNING: fa17-cs425-g48-08.cs.illinois.edu failed
+2017-10-08 23:06:37:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 23:06:39:WARNING: fa17-cs425-g48-09.cs.illinois.edu failed
+2017-10-08 23:06:39:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-08 23:06:39:WARNING: fa17-cs425-g48-08.cs.illinois.edu failed
+2017-10-08 23:06:39:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-08 23:06:40:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-09 13:29:35:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:37:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:39:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:41:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:43:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:45:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:47:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:49:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:51:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:53:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:56:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:29:58:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:00:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:02:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:04:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:07:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:09:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:12:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:14:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:16:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:19:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:21:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:23:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:25:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:27:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:29:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:31:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:33:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:36:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:38:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:30:40:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:31:51:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:51:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:52:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:52:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:53:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:53:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:54:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:54:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:55:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:55:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:56:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:56:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:57:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:57:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:58:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:58:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:59:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:31:59:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:00:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:00:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:01:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:01:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:02:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:02:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:03:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:03:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:04:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:04:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:05:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:05:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:06:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:06:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:07:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:07:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:08:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:08:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:09:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:09:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:10:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:10:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:11:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-09 13:32:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-09 13:32:11:WARNING: fa17-cs425-g48-02.cs.illinois.edu suspected failure
+2017-10-09 13:32:12:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:13:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-09 13:32:13:WARNING: fa17-cs425-g48-02.cs.illinois.edu suspected failure
+2017-10-09 13:32:14:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:15:WARNING: fa17-cs425-g48-03.cs.illinois.edu suspected failure
+2017-10-09 13:32:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu suspected failure
+2017-10-09 13:32:15:WARNING: fa17-cs425-g48-02.cs.illinois.edu suspected failure
+2017-10-09 13:32:16:WARNING: fa17-cs425-g48-03.cs.illinois.edu failed
+2017-10-09 13:32:16:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:32:16:WARNING: fa17-cs425-g48-02.cs.illinois.edu failed
+2017-10-09 13:32:16:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:17:WARNING: fa17-cs425-g48-05.cs.illinois.edu suspected failure
+2017-10-09 13:32:17:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:32:18:WARNING: fa17-cs425-g48-06.cs.illinois.edu suspected failure
+2017-10-09 13:32:18:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:32:19:WARNING: fa17-cs425-g48-06.cs.illinois.edu failed
+2017-10-09 13:32:19:WARNING: fa17-cs425-g48-07.cs.illinois.edu suspected failure
+2017-10-09 13:32:20:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:32:21:WARNING: fa17-cs425-g48-08.cs.illinois.edu suspected failure
+2017-10-09 13:32:22:WARNING: fa17-cs425-g48-09.cs.illinois.edu suspected failure
+2017-10-09 13:32:22:WARNING: fa17-cs425-g48-08.cs.illinois.edu failed
+2017-10-09 13:32:22:WARNING: fa17-cs425-g48-10.cs.illinois.edu failed
+2017-10-09 13:33:33:WARNING: fa17-cs425-g48-07.cs.illinois.edu failed
+2017-10-09 13:33:58:WARNING: fa17-cs425-g48-03.cs.illinois.edu failed
+2017-10-09 13:34:01:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:03:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:03:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:05:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:05:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:07:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:09:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:09:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:11:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:13:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:13:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:15:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:17:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:17:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:19:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:19:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:21:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:21:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:23:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:23:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:25:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:25:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:27:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:27:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:29:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:29:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:31:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:31:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:33:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:33:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:35:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:35:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:37:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:37:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:39:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:39:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:41:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:41:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:43:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:43:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:45:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:45:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:47:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:47:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:49:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:49:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:51:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:51:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:53:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:53:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:55:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:55:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:57:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:34:57:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:34:59:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:00:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:01:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:02:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:03:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:04:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:05:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:06:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:08:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:09:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:10:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:12:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:13:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:14:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:16:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:17:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:18:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:19:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:20:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:21:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:22:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:23:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:24:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:25:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:26:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:27:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:28:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:29:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:30:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:31:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:32:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:33:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:34:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:35:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:36:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:37:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:38:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:39:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:40:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:41:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:42:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:43:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:44:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:45:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:46:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:47:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:48:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:49:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:50:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:51:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:52:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:53:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:54:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:55:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:56:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:57:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:35:58:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:35:59:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:00:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:01:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:02:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:03:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:04:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:05:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:06:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:07:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:08:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:09:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:10:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:11:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:12:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:13:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:14:WARNING: fa17-cs425-g48-05.cs.illinois.edu failed
+2017-10-09 13:36:15:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
+2017-10-09 13:36:17:WARNING: fa17-cs425-g48-04.cs.illinois.edu failed
