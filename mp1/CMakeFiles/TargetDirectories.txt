@@ -1,0 +1,4 @@
+/home/twu54/cs425-MPs/mp1/benchmark/CMakeFiles/benchmark_grep.dir
+/home/twu54/cs425-MPs/mp1/client/CMakeFiles/log_grep.dir
+/home/twu54/cs425-MPs/mp1/server/CMakeFiles/log_grep_server.dir
+/home/twu54/cs425-MPs/mp1/test/CMakeFiles/log_grep_test.dir

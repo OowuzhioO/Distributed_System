@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/twu54/cs425-MPs/mp1/server/LogQueryServer.cpp
+LogQueryServer.h
+/home/twu54/cs425-MPs/mp1/server/LogQueryServer.h
+
+/home/twu54/cs425-MPs/mp1/server/LogQueryServer.h
+boost/asio.hpp
+-
+LogQuerySession.h
+/home/twu54/cs425-MPs/mp1/server/LogQuerySession.h
+
+/home/twu54/cs425-MPs/mp1/server/LogQuerySession.cpp
+LogQuerySession.h
+/home/twu54/cs425-MPs/mp1/server/LogQuerySession.h
+
+/home/twu54/cs425-MPs/mp1/server/LogQuerySession.h
+array
+-
+boost/asio.hpp
+-
+iostream
+-
+memory
+-
+string
+-
+
+/home/twu54/cs425-MPs/mp1/server/main.cpp
+LogQueryServer.h
+/home/twu54/cs425-MPs/mp1/server/LogQueryServer.h
+boost/asio.hpp
+-
+

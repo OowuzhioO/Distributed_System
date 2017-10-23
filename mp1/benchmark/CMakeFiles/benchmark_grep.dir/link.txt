@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++1y -pthread    CMakeFiles/benchmark_grep.dir/main.cpp.o CMakeFiles/benchmark_grep.dir/__/client/LogQueryClient.cpp.o  -o benchmark_grep -rdynamic -lboost_system-mt 

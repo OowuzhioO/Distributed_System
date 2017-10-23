@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++1y -pthread    CMakeFiles/log_grep_test.dir/__/client/LogQueryClient.cpp.o CMakeFiles/log_grep_test.dir/LogGrepTests.cpp.o  -o log_grep_test -rdynamic -lboost_system-mt 

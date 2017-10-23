@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++1y -pthread    CMakeFiles/log_grep_server.dir/LogQueryServer.cpp.o CMakeFiles/log_grep_server.dir/LogQuerySession.cpp.o CMakeFiles/log_grep_server.dir/main.cpp.o  -o log_grep_server -rdynamic -lboost_system-mt 

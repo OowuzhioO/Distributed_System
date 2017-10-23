@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/twu54/cs425-MPs/mp1/benchmark/main.cpp
+chrono
+-
+vector
+-
+../client/LogQueryClient.h
+/home/twu54/cs425-MPs/mp1/client/LogQueryClient.h
+
+/home/twu54/cs425-MPs/mp1/client/LogQueryClient.cpp
+LogQueryClient.h
+/home/twu54/cs425-MPs/mp1/client/LogQueryClient.h
+
+/home/twu54/cs425-MPs/mp1/client/LogQueryClient.h
+boost/asio.hpp
+-
+fstream
+-
+vector
+-
+

@@ -1,0 +1,7 @@
+one_time_copy_vm_log.sh: copy the log files provided by NASA from current machine to every other machine (no argument)
+log_generator.cpp: for generating small random logs
+create_small_log.sh: automatically handle log_generator.cpp and create small random text cases for testing on each machine(no argument)
+
+
+
+

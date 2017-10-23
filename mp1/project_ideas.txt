@@ -1,0 +1,20 @@
+Plans:
+
+Language and Compiler set up:
+We will be using C++ with boost::asio (sudo yum install boost-devel).
+CMake will be used to generate the Makefile (installed using "sudo yum install cmake").
+Use "cmake ." to generate a Makefile in the current directory. A CMakeLists.txt file is required for it to work.
+
+First part (coding without test):
+2 major subparts: 1. automate the logging process 2. distributed grep
+Since we need socket programming for future mps, we will probably use socket for 2.
+Create log files should be easier compared to distributed grep
+for 2., we can either grep then send the result to us. (Dependent on the performance, we can compare it to send result to grep, or we can add some parallelism on each connection if it helps)
+
+Second part (test, dependent on first? or we can write a function definition that won't chagne and we can plan the testing)
+Need to generate edge cases and fault injection. Can choose to use other library or our own
+
+
+Report: we need to write a report either at the end or during the process
+
+(Add any other stuff)
