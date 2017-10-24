@@ -1,4 +1,5 @@
 import SocketServer
+from message import *
 import socket
 
 class MyTCPHandler(SocketServer.StreamRequestHandler):
@@ -13,17 +14,20 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
 	def handle(self):
 		# self.rfile is a file-like object created by the handler;
 		# we can now use e.g. readline() instead of raw recv() calls
-		print('connection',self.server.conn)
-		self.data = self.rfile.readline().strip()
+		assert type(self.request) == socket._socketobject
+		addr = self.server.conn[0]
+		self.data = receive_all_decrypted(self.request)
 		print "{} wrote:".format(self.client_address[0])
 		print self.data
+		with open('f','w') as f:
+			f.write(addr+self.data.upper())
 		# Likewise, self.wfile is a file-like object used to write back
 		# to the client
-		self.wfile.write(self.data.upper())
-
+		with open('f','r') as f:
+			send_all_from_file(self.request, f)
 
 if __name__ == "__main__":
-	HOST, PORT = socket.gethostname(), 9999
+	HOST, PORT = socket.gethostname(), SERVER_PORT
 
 	# Create the server, binding to localhost on port 9999
 	SocketServer.ThreadingTCPServer.allow_reuse_address = 1
