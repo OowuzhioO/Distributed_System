@@ -1,0 +1,8 @@
+*.log
+log*.txt
+*cmake*
+*CMake*
+*akefile*
+*.pyc
+scripts/*.txt
+*temp*
