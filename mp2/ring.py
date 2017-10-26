@@ -23,14 +23,14 @@ def update_neighbors(target_id, sorted_memlist, curr_id, curr_neighbors):
 	i = binary_search(sorted_memlist, curr_id, target_id)
 	if i < len(sorted_memlist) and sorted_memlist[i] == target_id:#target_id in sorted_memlist:
 		# delete it and find next best
+		sorted_memlist.remove(target_id)
 		if target_id in curr_neighbors:
 			curr_neighbors.remove(target_id)
-			if len(curr_neighbors) == 3:
+			if len(sorted_memlist) >= 4: 
 				if i < 2:
-					curr_neighbors.append(sorted_memlist[2])
+					curr_neighbors.append(sorted_memlist[1])
 				else:
-					curr_neighbors.append(sorted_memlist[-3])
-		sorted_memlist.remove(target_id)
+					curr_neighbors.append(sorted_memlist[-2])
 	else: 
 		# new element, use binary search result to find next
 		sorted_memlist.insert(i, target_id)

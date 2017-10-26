@@ -14,8 +14,9 @@ def decoded(message):
 
 # Gossips the membership list to all targets
 def gossip_mem_list(targets, port, membership_list):
-	for host in targets:
-		send_UDP(host, port, membership_list)
+	for target in targets:
+		send_UDP(target[:len(CONTACT_HOST)], port, membership_list)
+		# a bit tricky......
 
 # Encodes the membership list and sends it via UDP
 def send_UDP(host, port, message):
