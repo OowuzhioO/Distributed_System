@@ -1,0 +1,4 @@
+Precondition: needs to have pssh and sshpass installed on current machine
+init_git.sh: init the git repo on all machines 
+install_package.sh: install the package provided by first argument on all machines
+ssh_git_pull.sh: git pull on all machines
