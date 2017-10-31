@@ -11,5 +11,5 @@ do
 done
 
 sshpass -p $password pssh -h hostnames.txt -A -x '-tt'  -i "-O StrictHostKeyChecking=no" -l root \
-"git clone https://${username}:${password}@gitlab.engr.illinois.edu/twu54/cs425-MP.git && cd cs425-MP/ && git remote set-url origin git@gitlab.engr.illinois.edu:twu54/cs425-MP.git" 
+"git clone https://${username}:${password}@gitlab.engr.illinois.edu/twu54/cs425-MP.git"
 
