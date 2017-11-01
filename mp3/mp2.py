@@ -99,7 +99,7 @@ class Timer(object):
 class heartbeat_detector(object):
 	#  added membList and changed host name, tFail
 	def __init__(self, hostName, VM_DICT,tFail, tick ,introList,port, randomthreshold, num_N =3):
-		## input hostName -- this node's host name e.g 'fa17-cs425-g57-01.cs.illinois.edu'
+		## input hostName -- this node's host name e.g 'fa17-cs425-g48-01.cs.illinois.edu'
 		## VM_DICT -- mapping host name to node name
 		## tFail -- FD detector protocal period time
 		## introList -- pre-selected introducer list by node names
@@ -454,7 +454,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# update VM ip with node id
-	VM_DICT.update(OrderedDict({'fa17-cs425-g57-%02d.cs.illinois.edu'%i:'Node%02d'%i for i in range(1,11)}))
+	VM_DICT.update(OrderedDict({'fa17-cs425-g48-%02d.cs.illinois.edu'%i:'Node%02d'%i for i in range(1,11)}))
 	
 	# manually assign two introducers
 	VM_INTRO = ['Node01','Node02']
