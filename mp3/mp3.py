@@ -15,16 +15,19 @@ import struct
 import json # for serialize heatbeat messages
 import pdb
 import pprint
+import datetime
 import random
 
 
-VM_DICT={}
+VM_DICT={} # simple convert vm name to simple names
 VM_DICT.update({socket.gethostname():'localhost'})
 
+# total order figure out at the end
+# send start time is the key
 
 
 def stampedMsg(msg):
-	return strftime("[%Y-%m-%d %H:%M:%S] ", localtime())+msg
+	return strftime("[%Y-%m-%d %H:%M:%S] ", localtime())+str(msg)
 
 
 ### customized timer function ###
@@ -54,60 +57,41 @@ class Timer(object):
 
 
 
-### Heartbeat failure detector object ###
+### main object ###
 class distributed_file_system(object):
-	#  added membList and changed host name, tFail
-	def __init__(self, hostName, VM_DICT,tFail, tick ,introList, randomthreshold, num_N =3, membList):
-		## input hostName -- this node's host name e.g 'fa17-cs425-g57-01.cs.illinois.edu'
+	#  added membList 
+	def __init__(self, hostName, groupID, VM_DICT, membList, w_quorum =3, r_quorum = 2):
+		## input hostName -- this node's group id after joining
 		## VM_DICT -- mapping host name to node name
-		## tFail -- FD detector protocal period time
-		## introList -- pre-selected introducer list by node names
 
 		self.hostName=hostName
 		self.VM_DICT = VM_DICT
 		self.VM_INV = {v:k for k,v in VM_DICT.items()} # inverse dict of VM_DICT
 		self.nodeName = self.VM_DICT[self.hostName]
-		self.introList = introList
 		self.host = socket.gethostbyname(self.hostName)
-		logging.debug("{} has port {}".format(hostName, port))
-		self.meta_port = 5363
-		self.file_port = 1453
-		self.randomthreshold = randomthreshold
-		self.bufsize = 4096
+		self.port = 5363 
 		# membership list, passed in reference so can know the current members even within the class
 		# However can't change it and should not use it to check churn
 		# Instead each churn should call the corresponding function of this class
 		self.membList = membList
 
 		# a list of information about file
-		self.metadata = []
-
-		# misc settings
-		self.tFail = tFail
-		self.tCleanUp = 2*self.tFail
+		self.global_file_info = {} # each element is filename: [latest update time, list of nodes storing the file]
+		self.local_file_info = {} # each element is  filename: [timestamp when receiving this file]
 		self.timer = Timer() # use custimized timer instead of time.time
 
-		#only a introducer can add node to system
-		self.isIntro = True if self.nodeName in self.introList else False
-
-		self.num_N=num_N
-		self.neighbors = []
-		self.tick = tick
+		self.w_quorum = w_quorum
+		self.r_quorum = r_quorum
 
 		# initlize group id, later to be changed by self.joinGrp()
-		self.groupID = self.hostName
+		self.groupID = groupID
 		# token for introduction and leave
-		self.str_receive_file = 'The following is for file content'
+		self.message_file = 'The following is for file content'
+		self.message_data = 'Following is information of new file'
 
-	# strip necessary info from membership list
-	def prepMsg(self):
-		strippedMembList = defaultdict(dict)
-		for memb in self.membList:
-			strippedMembList[memb] = {'count': self.membList[memb]['count']}
-		
-		msg=self.encodeMsg(strippedMembList)
-		return msg
-
+		monitor = threading.Thread(target=self.server_task)
+		monitor.daemon=True
+		monitor.start()
 
 	def server_task(self):
 		#first, start local timer, the rest of the process follows this timer
@@ -131,7 +115,6 @@ class distributed_file_system(object):
 		while True:
 			try:
 				conn, addr = self.monitor.accept()
-				instruction = receive_all_decrypted(conn) # receive string json string				
 				rmtHost= socket.gethostbyaddr(addr[0])[0]
 				logging.debug(stampedMsg('Monitor recieve instruction from {}').format(rmtHost))
 			
@@ -140,6 +123,7 @@ class distributed_file_system(object):
 				logging.warning(stampedMsg('Fail to receive signal from clients {}'.format(rmtHost)))
 				break #TODO: should we break listening if UDP reception has troubles?
 
+			data = receive_all_decrypted(conn)
 			if not data: # possibly never called in UDP					
 				logging.info(stampedMsg('Receiving stop signal from clients {}'.format(rmtHost)))
 				break
@@ -147,13 +131,16 @@ class distributed_file_system(object):
 			# log whatever recieved
 			logging.debug(stampedMsg(data))
 
-			if data == self.str_receive_file: # if receive leave signal
+			if data == self.message_file: # if receive leave signal
 				# include filename info for debugging purposes
+				filename = receive_all_to_target(conn)
 				logging.info(stampedMsg('receiving file {} from {}'.format(filename, rmtHost)))
+				self.local_file_info[filename] = datetime.datetime.now()
 
-
-			else: # ....
-				pass
+			elif data == self.message_data: # ....
+				filename, file_nodes = receive_all_decrypted(conn)
+				self.global_file_info[filename] = (self.timer.toc(), file_nodes) # time should sent over instead of local
+				# process info next
 
 		return None 
 
@@ -162,7 +149,18 @@ class distributed_file_system(object):
 		pass
 
 	def putFile(self, filename):
-		pass
+		if (filename in self.global_file_info):
+			# broadcast to that group
+			target_processes = [node for node in self.global_file_info[filename][-1] if node != self.groupID]
+			self.broadCastFile(target_processes, filename)
+			# simple synchronization assumption
+			
+		else:
+			target_processes = random.sample(self.membList.keys(), min(self.w_quorum, len(self.membList)))
+			if self.groupID not in target_processes:
+				target_processes = target_processes[1:]+[self.groupID]	
+			self.broadCastFile(target_processes, filename) # don't broadcast to itself
+			self.broadCastData(self.membList.keys(), (filename, target_processes))
 
 	def deleteFile(self, filename):
 		pass
@@ -172,3 +170,29 @@ class distributed_file_system(object):
 		# do re-replicate
 		pass
 
+	# target should be in membershiplist key format (groupID)
+	def broadCastData(self, targets, data):
+		for target in targets:
+			target_hostname = target.split('_')[0]
+			target_host = socket.gethostbyname(target_hostname)
+			target_nodeName = self.VM_DICT[target_hostname]
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((target_host, self.port))
+			
+			send_all_encrypted(sock, self.message_data)
+			send_all_encrypted(sock, data)
+
+		logging.debug(stampedMsg('broadCast Data: {}'.format(data)))
+
+	# target should be in membershiplist key format (groupID)
+	def broadCastFile(self, targets, filename):
+		for target in targets:
+			target_hostname = target.split('_')[0]
+			target_host = socket.gethostbyname(target_hostname)
+			target_nodeName = self.VM_DICT[target_hostname]
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((target_host, self.port))
+			
+			logging.debug(stampedMsg('{} pushing file {} to node {}({})'.format(self.nodeName, filename, target_host, target_nodeName)))
+			send_all_encrypted(sock, self.message_file)
+			send_all_from_file(sock, filename)

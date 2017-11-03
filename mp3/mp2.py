@@ -15,6 +15,7 @@ import json # for serialize heatbeat messages
 import pdb
 import pprint
 import random
+from mp3 import distributed_file_system
 
 
 VM_DICT={}
@@ -103,6 +104,7 @@ class heartbeat_detector(object):
 		## VM_DICT -- mapping host name to node name
 		## tFail -- FD detector protocal period time
 		## introList -- pre-selected introducer list by node names
+		self.file_sys = None
 
 		self.hostName=hostName
 		self.VM_DICT = VM_DICT
@@ -418,6 +420,7 @@ class heartbeat_detector(object):
 		self.t_hb.daemon=True
 		self.t_hb.start()
 
+		self.file_sys = distributed_file_system(self.hostName, self.groupID, self.VM_DICT, self.membList)
 
 	def multicast_stopSignal(self):
 		leave = self.encodeMsg(self.leave)
@@ -510,6 +513,15 @@ if __name__ == '__main__':
 	instr = FDinstruction()
 	while True:
 		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ')
+		if cmd[:4].lower() == 'put ':
+			filename = cmd[4:]
+			if hbd.file_sys == None:
+				print 'Not yet joined the group'
+			elif not os.path.exists(filename):
+				print 'File {} does not exist'.format(filename)
+			else:
+				hbd.file_sys.putFile(filename)
+			continue
 
 		if cmd not in instr.keys():
 			pprint.pprint(instr)
@@ -537,6 +549,12 @@ if __name__ == '__main__':
 			pprint.pprint(dict(hbd.membList))
 			print 'this node\'s neighbors:'
 			pprint.pprint(sorted(hbd.neighbors))
+			if hbd.file_sys != None:
+				print 'file system local information'
+				pprint.pprint(hbd.file_sys.local_file_info)
+				print 'file system global information'
+				pprint.pprint(hbd.file_sys.global_file_info)
+
 		else:
 			print 'unrecognized cmd:{}'.format(cmd)	
 		# elif instr == 'monitor':

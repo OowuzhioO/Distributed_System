@@ -52,6 +52,7 @@ def receive_all_to_target(sock, target = None):
 
 	if type(target) != socket._socketobject:
 		target.close()
+	return file_name
 
 
 
