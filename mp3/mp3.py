@@ -85,7 +85,7 @@ class distributed_file_system(object):
 
 		# initlize group id, later to be changed by self.joinGrp()
 		self.groupID = groupID
-		# token for introduction and leave
+		# message types
 		self.message_file = 'The following is for file content'
 		self.message_data = 'Following is information of new file'
 		self.message_ask_time = 'Please give me the last update time for the following file'
@@ -169,6 +169,10 @@ class distributed_file_system(object):
 				filename = receive_all_decrypted(conn)
 				if filename in self.local_file_info:
 					del self.local_file_info[filename]
+					try:
+						os.remove(filename)
+					except:
+						logging.debug(stampedMsg('Deleting file {} failed'.format(filename)))
 					# Let's leave the real file there for now .....
 
 		return None 
@@ -191,6 +195,7 @@ class distributed_file_system(object):
 
 			self.broadCastFile(target_processes, filename) 
 			self.broadCastData(self.membList.keys(), (filename, target_processes))
+		return True
 
 
 	def getFile(self, filename):
@@ -221,11 +226,11 @@ class distributed_file_system(object):
 		next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
 		try:
 			self.broadCastFile(next_replica, filename)
-			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
 		except: # 2 simultaneous fail
 			no_replica = [node for node in no_replica if node != next_replica]
 			next_replica = random.sample(no_replica, min(1, len(no_replica)))
 			self.broadCastFile(next_replica, filename)
+		finally:
 			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
 
 
@@ -256,7 +261,10 @@ class distributed_file_system(object):
 	# target should be in membershiplist key format (groupID)
 	def broadCastData(self, targets, data):
 		for target in targets:
-			target_host, target_nodeName, sock = self.getParams(target)
+			try:
+				target_host, target_nodeName, sock = self.getParams(target)
+			except:
+				continue
 			send_all_encrypted(sock, self.message_data)
 			send_all_encrypted(sock, data)
 
