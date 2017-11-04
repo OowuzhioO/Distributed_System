@@ -92,13 +92,13 @@ class distributed_file_system(object):
 		self.message_ask_file = 'Please send me the cur file content for the following file'
 		self.message_delete_data = 'Please delete the infomration of this file'
 		self.message_delete_file = 'Please delete the current content of this file'
-		self.message_failed = 'Please update or re-replicate '
 
 		monitor = threading.Thread(target=self.server_task)
 		monitor.daemon=True
 		monitor.start()
 
 	# Ideal design: only server is allowed to change file or meta-data information 
+	# Though should not for example start a new connection (deadlock)
 	def server_task(self):
 		#first, start local timer, the rest of the process follows this timer
 		self.timer.tic()
@@ -171,23 +171,7 @@ class distributed_file_system(object):
 					del self.local_file_info[filename]
 					# Let's leave the real file there for now .....
 
-			elif message == self.message_failed:
-				failed_process = receive_all_decrypted(conn)
-				for file, infos in self.global_file_info.items():
-					replicas = infos[-1]
-					if failed_process in replicas:
-						replicas.remove(failed_process)
-						if self.groupID == replicas[0]:
-							self.replicate(failed_process, replicas, file)
-
 		return None 
-
-	def replicate(self, failed_process, left_over_replicas, filename):
-			no_replica = [node for node in self.membList.keys() \
-				if (node not in left_over_replicas) and node != failed_process]
-			next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
-			self.broadCastFile(next_replica, filename)
-			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
 
 	# Below are 3 main function for accessing/modifying DFS: put/get/delete
 
@@ -231,14 +215,26 @@ class distributed_file_system(object):
 			return False
 
 
+	def replicate(self, failed_process, left_over_replicas, filename):
+		no_replica = [node for node in self.membList.keys() \
+			if (node not in left_over_replicas) and node != failed_process]
+		next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
+		self.broadCastFile(next_replica, filename)
+		self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
+
+
 	# Need to be called for replication of metadata on time
 	# should be called after memList is updated
 	def onProcessFail(self, failed_process):
 		# do re-replication
 		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
-		target_host, target_nodeName, sock = self.getParams(self.groupID)
-		send_all_encrypted(sock, self.message_failed)
-		send_all_encrypted(sock, failed_process)
+		for file, infos in self.global_file_info.items():
+			replicas = infos[-1]
+			if failed_process in replicas:
+				replicas.remove(failed_process)
+				if len(replicas) > 0 and self.groupID == replicas[0]:
+					self.replicate(failed_process, replicas, file)
+
 
 
 	# helper function to reduce code redundancy/duplication
@@ -247,7 +243,7 @@ class distributed_file_system(object):
 		target_host = socket.gethostbyname(target_hostname)
 		target_nodeName = self.VM_DICT[target_hostname]
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((target_host, self.port))
+		sock.connect((target_host, self.port)) # call might fail
 		return target_host, target_nodeName, sock 
 
 
@@ -271,7 +267,7 @@ class distributed_file_system(object):
 				send_all_from_file(sock, filename)
 			logging.debug(stampedMsg('{} pushing file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
 
-
+	# return the most recent node for polling result
 	def mostRecentNode(self, targets, filename):
 		max_time, max_target = None, None
 		for target in targets:
@@ -282,6 +278,7 @@ class distributed_file_system(object):
 			if max_time == None or timestamp > max_time:
 				max_time, max_target = timestamp, target
 		return max_target
+
 
 	def askForFile(self, target, filename):
 		if target == self.groupID:
@@ -307,3 +304,4 @@ class distributed_file_system(object):
 			send_all_encrypted(sock, self.message_delete_file)
 			send_all_encrypted(sock, filename)
 			logging.debug(stampedMsg('{} asking for deletion of file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
+	

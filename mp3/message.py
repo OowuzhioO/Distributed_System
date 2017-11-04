@@ -49,6 +49,7 @@ def receive_all_to_target(sock, target = None):
 			target.sendall(received)
 		else: # file 
 			target.write(received)
+		len_left_over -= len(received)
 
 	if type(target) != socket._socketobject:
 		target.close()
