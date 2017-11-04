@@ -88,11 +88,17 @@ class distributed_file_system(object):
 		# token for introduction and leave
 		self.message_file = 'The following is for file content'
 		self.message_data = 'Following is information of new file'
+		self.message_ask_time = 'Please give me the last update time for the following file'
+		self.message_ask_file = 'Please send me the cur file content for the following file'
+		self.message_delete_data = 'Please delete the infomration of this file'
+		self.message_delete_file = 'Please delete the current content of this file'
+		self.message_failed = 'Please update or re-replicate '
 
 		monitor = threading.Thread(target=self.server_task)
 		monitor.daemon=True
 		monitor.start()
 
+	# Ideal design: only server is allowed to change file or meta-data information 
 	def server_task(self):
 		#first, start local timer, the rest of the process follows this timer
 		self.timer.tic()
@@ -106,7 +112,7 @@ class distributed_file_system(object):
 
 
 		# self.monitor.listen(10) # UDP doesn't support this
-		logging.info(stampedMsg('Monitoring process opens.'))
+		logging.info(stampedMsg('FS Monitoring process opens.'))
 		
 		# keep receiving msgs from other VMs
 		# receiving heartbeat and other messages 
@@ -116,69 +122,139 @@ class distributed_file_system(object):
 			try:
 				conn, addr = self.monitor.accept()
 				rmtHost= socket.gethostbyaddr(addr[0])[0]
-				logging.debug(stampedMsg('Monitor recieve instruction from {}').format(rmtHost))
+				logging.debug(stampedMsg('FS Monitor recieve instruction from {}').format(rmtHost))
 			
 			except socket.error, e:
 				logging.warning("Caught exception socket.error : %s" %e)
 				logging.warning(stampedMsg('Fail to receive signal from clients {}'.format(rmtHost)))
 				break #TODO: should we break listening if UDP reception has troubles?
 
-			data = receive_all_decrypted(conn)
-			if not data: # possibly never called in UDP					
+			message = receive_all_decrypted(conn) # the instruction
+			if not message: # possibly never called in UDP					
 				logging.info(stampedMsg('Receiving stop signal from clients {}'.format(rmtHost)))
 				break
 
 			# log whatever recieved
-			logging.debug(stampedMsg(data))
+			logging.debug(stampedMsg(message))
 
-			if data == self.message_file: # if receive leave signal
+			if message == self.message_file: # if receive leave signal
 				# include filename info for debugging purposes
-				filename = receive_all_to_target(conn)
+				if rmtHost == self.hostName:
+					filename = str(receive_all_decrypted(conn))
+				else:
+					filename = receive_all_to_target(conn)
 				logging.info(stampedMsg('receiving file {} from {}'.format(filename, rmtHost)))
-				self.local_file_info[filename] = datetime.datetime.now()
+				self.local_file_info[filename] = datetime.datetime.now().isoformat()
 
-			elif data == self.message_data: # ....
+			elif message == self.message_data: # ....
 				filename, file_nodes = receive_all_decrypted(conn)
+				filename = str(filename) # get rid of annoying utf-encoding prefix
+				file_nodes = list(map(str, file_nodes))
 				self.global_file_info[filename] = (self.timer.toc(), file_nodes) # time should sent over instead of local
-				# process info next
+
+			elif message == self.message_ask_time:
+				filename = receive_all_decrypted(conn)
+				send_all_encrypted(conn, self.local_file_info[filename])
+
+			elif message == self.message_ask_file:
+				filename = receive_all_decrypted(conn)
+				send_all_from_file(conn, filename)
+
+			elif message == self.message_delete_data:
+				filename = receive_all_decrypted(conn)
+				if filename in self.global_file_info:
+					del self.global_file_info[filename]
+
+			elif message == self.message_delete_file:
+				filename = receive_all_decrypted(conn)
+				if filename in self.local_file_info:
+					del self.local_file_info[filename]
+					# Let's leave the real file there for now .....
+
+			elif message == self.message_failed:
+				failed_process = receive_all_decrypted(conn)
+				for file, infos in self.global_file_info.items():
+					replicas = infos[-1]
+					if failed_process in replicas:
+						replicas.remove(failed_process)
+						if self.groupID == replicas[0]:
+							self.replicate(failed_process, replicas, file)
 
 		return None 
 
-	def getFile(self, filename):
-		# check metadata first
-		pass
+	def replicate(self, failed_process, left_over_replicas, filename):
+			no_replica = [node for node in self.membList.keys() \
+				if (node not in left_over_replicas) and node != failed_process]
+			next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
+			self.broadCastFile(next_replica, filename)
+			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
+
+	# Below are 3 main function for accessing/modifying DFS: put/get/delete
 
 	def putFile(self, filename):
+		# failed should be passed as a groupID
+		# use should use a temporary file for consistency (e.g. error in middle of transmission)
 		if (filename in self.global_file_info):
 			# broadcast to that group
 			target_processes = [node for node in self.global_file_info[filename][-1] if node != self.groupID]
 			self.broadCastFile(target_processes, filename)
 			# simple synchronization assumption
-			
+
 		else:
 			target_processes = random.sample(self.membList.keys(), min(self.w_quorum, len(self.membList)))
 			if self.groupID not in target_processes:
 				target_processes = target_processes[1:]+[self.groupID]	
-			self.broadCastFile(target_processes, filename) # don't broadcast to itself
+
+			self.broadCastFile(target_processes, filename) 
 			self.broadCastData(self.membList.keys(), (filename, target_processes))
 
+
+	def getFile(self, filename):
+		# check metadata first
+		if (filename in self.global_file_info):
+			replicas_nodes = self.global_file_info[filename][-1]
+			target_nodes = random.sample(replicas_nodes, min(self.r_quorum, len(replicas_nodes)))
+			target = self.mostRecentNode(target_nodes, filename)
+			self.askForFile(target, filename)
+			return True 
+		else:
+			return False
+
+
 	def deleteFile(self, filename):
-		pass
+		if (filename in self.global_file_info):
+			replicas_nodes = self.global_file_info[filename][-1]
+			self.broadCastData_delete(self.membList.keys(), filename)
+			self.broadCastFile_delete(replicas_nodes, filename)
+			return True 
+		else:
+			return False
 
 
-	def onProcessFail(self, left_process):
-		# do re-replicate
-		pass
+	# Need to be called for replication of metadata on time
+	# should be called after memList is updated
+	def onProcessFail(self, failed_process):
+		# do re-replication
+		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
+		target_host, target_nodeName, sock = self.getParams(self.groupID)
+		send_all_encrypted(sock, self.message_failed)
+		send_all_encrypted(sock, failed_process)
+
+
+	# helper function to reduce code redundancy/duplication
+	def getParams(self, target):
+		target_hostname = target.split('_')[0]
+		target_host = socket.gethostbyname(target_hostname)
+		target_nodeName = self.VM_DICT[target_hostname]
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((target_host, self.port))
+		return target_host, target_nodeName, sock 
+
 
 	# target should be in membershiplist key format (groupID)
 	def broadCastData(self, targets, data):
 		for target in targets:
-			target_hostname = target.split('_')[0]
-			target_host = socket.gethostbyname(target_hostname)
-			target_nodeName = self.VM_DICT[target_hostname]
-			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			sock.connect((target_host, self.port))
-			
+			target_host, target_nodeName, sock = self.getParams(target)
 			send_all_encrypted(sock, self.message_data)
 			send_all_encrypted(sock, data)
 
@@ -187,12 +263,47 @@ class distributed_file_system(object):
 	# target should be in membershiplist key format (groupID)
 	def broadCastFile(self, targets, filename):
 		for target in targets:
-			target_hostname = target.split('_')[0]
-			target_host = socket.gethostbyname(target_hostname)
-			target_nodeName = self.VM_DICT[target_hostname]
-			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			sock.connect((target_host, self.port))
-			
-			logging.debug(stampedMsg('{} pushing file {} to node {}({})'.format(self.nodeName, filename, target_host, target_nodeName)))
+			target_host, target_nodeName, sock = self.getParams(target)
 			send_all_encrypted(sock, self.message_file)
-			send_all_from_file(sock, filename)
+			if target == self.groupID:
+				send_all_encrypted(sock, filename)
+			else:
+				send_all_from_file(sock, filename)
+			logging.debug(stampedMsg('{} pushing file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
+
+
+	def mostRecentNode(self, targets, filename):
+		max_time, max_target = None, None
+		for target in targets:
+			target_host, target_nodeName, sock = self.getParams(target)
+			send_all_encrypted(sock, self.message_ask_time)
+			send_all_encrypted(sock, filename)
+			timestamp = receive_all_decrypted(sock)
+			if max_time == None or timestamp > max_time:
+				max_time, max_target = timestamp, target
+		return max_target
+
+	def askForFile(self, target, filename):
+		if target == self.groupID:
+			return
+		target_host, target_nodeName, sock = self.getParams(target)
+		send_all_encrypted(sock, self.message_ask_file)
+		send_all_encrypted(sock, filename)
+		receive_all_to_target(sock)
+
+
+	def broadCastData_delete(self, targets, data): # in this case, data is just filename
+		for target in targets:
+			target_host, target_nodeName, sock = self.getParams(target)
+			send_all_encrypted(sock, self.message_delete_data)
+			send_all_encrypted(sock, data)
+
+		logging.debug(stampedMsg('broadCast file data deletion: {}'.format(data)))
+
+	# target should be in membershiplist key format (groupID)
+	def broadCastFile_delete(self, targets, filename):
+		for target in targets:
+			target_host, target_nodeName, sock = self.getParams(target)
+			send_all_encrypted(sock, self.message_delete_file)
+			send_all_encrypted(sock, filename)
+			logging.debug(stampedMsg('{} asking for deletion of file {} to node {}'.format(self.nodeName, filename, target_nodeName)))

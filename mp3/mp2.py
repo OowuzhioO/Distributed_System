@@ -21,7 +21,6 @@ from mp3 import distributed_file_system
 VM_DICT={}
 VM_DICT.update({socket.gethostname():'localhost'})
 
-
 ## helper functions ###
 def FDinstruction():
 	instr={}
@@ -31,6 +30,11 @@ def FDinstruction():
 	instr['leave'] = 'leave the group'
 	instr['help'] = 'display possible cmds'
 	instr['misc'] = 'display misc info'
+	instr['store'] = 'list the set of filenames stored here'
+	instr['ls <filename>'] = 'list all VMs where file is replicated'
+	instr['put <filename>'] = 'upload file to DFS'
+	instr['get <filename>'] = 'download file from DFS'
+	instr['delete <filename>'] = 'delete file in DFS'
 	return instr
 
 def findNeighbors(n, hostNameId, membershipIds):
@@ -302,6 +306,7 @@ class heartbeat_detector(object):
 				elif (maxTime - self.membList[i]['localtime'] >= 2*self.tFail) and (self.membList[i]['isFailure']):
 					logging.info("{} will be deleted from membership list".format(i))
 					self.membList.pop(i)
+					self.file_sys.onProcessFail(i)
 			# if tFail was not exceeded
 			elif self.membList[i]['isFailure']:
 				logging.info("{} was labeled failed but has responded again".format(i))
@@ -511,16 +516,56 @@ if __name__ == '__main__':
 
 	#keep the program going
 	instr = FDinstruction()
+	str_not_joined = 'Not yet joined the system'
 	while True:
 		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ')
+
 		if cmd[:4].lower() == 'put ':
 			filename = cmd[4:]
 			if hbd.file_sys == None:
-				print 'Not yet joined the group'
-			elif not os.path.exists(filename):
-				print 'File {} does not exist'.format(filename)
-			else:
+				print str_not_joined
+			elif os.path.exists(filename):
 				hbd.file_sys.putFile(filename)
+				print 'File {} Uploaded'.format(filename)
+			else:
+				print 'File {} does not exist'.format(filename)
+			continue
+
+		elif cmd[:4].lower() == 'get ':
+			filename = cmd[4:]
+			if hbd.file_sys == None:
+				print str_not_joined
+			else:
+				if hbd.file_sys.getFile(filename):
+					print 'File {} Downloaded'.format(filename)
+				else:
+					print 'File {} does not exist'.format(filename)
+			continue
+
+		elif cmd[:7].lower() == 'delete ':
+			filename = cmd[7:]
+			if hbd.file_sys == None:
+				print str_not_joined
+			else:
+				if hbd.file_sys.deleteFile(filename):
+					print 'File {} Deleted'.format(filename)
+				else:
+					print 'File {} does not exist'.format(filename)
+			continue
+
+
+
+		elif cmd[:3].lower() == 'ls ':
+			filename = cmd[3:]
+			if hbd.file_sys == None:
+				print str_not_joined
+			else:
+				target_file_info =  hbd.file_sys.global_file_info.get(filename)
+				if target_file_info == None:
+					print 'There is no such file under the system'
+				else:
+					print 'Nodes containing this file: '
+					pprint.pprint(target_file_info[-1])
 			continue
 
 		if cmd not in instr.keys():
@@ -529,6 +574,13 @@ if __name__ == '__main__':
 
 		if cmd == 'help':
 			pprint.pprint(instr)
+
+		elif cmd == 'store':
+			if hbd.file_sys == None:
+				print 'Not yet joined the group'
+			else:
+				print 'File stored locally: ' 
+				pprint.pprint(sorted(hbd.file_sys.local_file_info.keys()))
 
 		elif cmd == 'join':
 			print 'joining the group'
@@ -556,7 +608,10 @@ if __name__ == '__main__':
 				pprint.pprint(hbd.file_sys.global_file_info)
 
 		else:
-			print 'unrecognized cmd:{}'.format(cmd)	
+			if (cmd.lower() == 'put') or (cmd.lower() == 'get') or (cmd.lower() == 'delete'):
+				print 'no arg provided'
+			else:
+				print 'unrecognized cmd:{}'.format(cmd)	
 		# elif instr == 'monitor':
 		# 	print 'testing monitor'
 		# 	hbd.monitor()
