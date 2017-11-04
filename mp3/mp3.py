@@ -219,8 +219,14 @@ class distributed_file_system(object):
 		no_replica = [node for node in self.membList.keys() \
 			if (node not in left_over_replicas) and node != failed_process]
 		next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
-		self.broadCastFile(next_replica, filename)
-		self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
+		try:
+			self.broadCastFile(next_replica, filename)
+			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
+		except: # 2 simultaneous fail
+			no_replica = [node for node in no_replica if node != next_replica]
+			next_replica = random.sample(no_replica, min(1, len(no_replica)))
+			self.broadCastFile(next_replica, filename)
+			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
 
 
 	# Need to be called for replication of metadata on time
@@ -304,4 +310,3 @@ class distributed_file_system(object):
 			send_all_encrypted(sock, self.message_delete_file)
 			send_all_encrypted(sock, filename)
 			logging.debug(stampedMsg('{} asking for deletion of file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
-	

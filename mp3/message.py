@@ -43,13 +43,18 @@ def receive_all_to_target(sock, target = None):
 		target = open(file_name, 'w')
 	received = 'enter_loop'
 
+	sock.settimeout(2) # make sure doesn't hang
 	while (len(received) > 0 and len_left_over > 0):
-		received = sock.recv(min(len_left_over, SIZE))
+		try:
+			received = sock.recv(min(len_left_over, SIZE))
+		except:
+			return str(file_name) 
 		if type(target) == socket._socketobject:
 			target.sendall(received)
 		else: # file 
 			target.write(received)
 		len_left_over -= len(received)
+	sock.settimeout(None)
 
 	if type(target) != socket._socketobject:
 		target.close()
