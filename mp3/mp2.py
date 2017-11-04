@@ -518,14 +518,19 @@ if __name__ == '__main__':
 	instr = FDinstruction()
 	str_not_joined = 'Not yet joined the system'
 	while True:
-		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ')
+		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ').strip()
 
 		if cmd[:4].lower() == 'put ':
 			filename = cmd[4:]
 			if hbd.file_sys == None:
 				print str_not_joined
 			elif os.path.exists(filename):
-				hbd.file_sys.putFile(filename)
+				if not hbd.file_sys.putFile(filename):
+					if raw_input('There is a write-write conflict. Enter yes to continue: ').strip().lower() == 'yes':
+						hbd.file_sys.putFile(filename, True)
+					else:
+						print('.....  Quiting ......')
+						continue
 				print 'File {} Uploaded'.format(filename)
 			else:
 				print 'File {} does not exist'.format(filename)

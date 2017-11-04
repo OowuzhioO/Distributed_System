@@ -34,26 +34,15 @@ def stampedMsg(msg):
 class Timer(object):
     """A simple timer."""
     def __init__(self):
-        self.total_time = 0.
-        self.calls = 0
         self.start_time = 0.
-        self.diff = 0.
-        self.average_time = 0.
 
     def tic(self):
         # using time.time instead of time.clock because time time.clock
         # does not normalize for multithreading
         self.start_time = time.time()
 
-    def toc(self, average=False):
-        self.diff = time.time() - self.start_time
-        self.total_time += self.diff
-        self.calls += 1
-        self.average_time = self.total_time / self.calls
-        if average:
-            return self.average_time
-        else:
-            return round(self.diff,8)
+    def toc(self):
+        return round(time.time()-self.start_time,8)
 
 
 
@@ -179,14 +168,18 @@ class distributed_file_system(object):
 
 	# Below are 3 main function for accessing/modifying DFS: put/get/delete
 
-	def putFile(self, filename):
+	def putFile(self, filename, conflict = False):
 		# failed should be passed as a groupID
 		# use should use a temporary file for consistency (e.g. error in middle of transmission)
 		if (filename in self.global_file_info):
 			# broadcast to that group
-			target_processes = [node for node in self.global_file_info[filename][-1] if node != self.groupID]
+			last_update_time, owner_nodes = self.global_file_info[filename]
+			if self.timer.toc()-last_update_time < 60 and not conflict:
+				return False
+			target_processes = [node for node in owner_nodes if node != self.groupID]
 			self.broadCastFile(target_processes, filename)
 			# simple synchronization assumption
+			
 
 		else:
 			target_processes = random.sample(self.membList.keys(), min(self.w_quorum, len(self.membList)))
