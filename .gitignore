@@ -6,3 +6,4 @@ log*.txt
 *.pyc
 scripts/*.txt
 *temp*
+filename*
