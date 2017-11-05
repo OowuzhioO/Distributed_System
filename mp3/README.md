@@ -1,5 +1,6 @@
-## Special Note
-We are using MP2 Best Solutions from group 57. 
+## Contributed project
+We are using MP2 Best Solutions from group 57. (Thanks!)
+We are borrowing our old MP1 for debugging (i.e. grep logs)
 
 ## Language
 We are using Python 2, so no compilation is required.  
@@ -14,17 +15,18 @@ get    <filename> : download file from DFS
 help              : display possible cmds  
 join              : join the group  
 leave             : leave the group  
-ls <filename>     : list all VMs where file is replicated  
+ls     <filename> : list all VMs where file is replicated  
 memb              : list the membership list  
 misc              : display misc info  
-put <filename>    : upload file to DFS  
+put    <filename> : upload file to DFS  
 self              : list self's id  
 store             : list the set of filenames stored here  
 ```
   
+There are also many arguments provided, mainly for debugging purpose
 Press Ctrl-C to simulate a failure
 
-## Classes
+## Files
 #### **main.py**
 Uses MP2 Best Solutions from group 57 as the basis  
 Merging dfs with their origin code and instructions.
