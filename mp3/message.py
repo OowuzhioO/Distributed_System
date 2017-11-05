@@ -6,7 +6,7 @@ import time
 SERVER_PORT = 3255
 HOSTS = ['fa17-cs425-g48-'+ "%02d"%machine_num +'.cs.illinois.edu' for machine_num in range(1,11)]
 BYTES_INT = 16 # limit the max file size
-SIZE = 131072 # limit each packet receive size
+SIZE = 200000 # limit each packet receive size
 
 def encoded(message):
 	return json.dumps(message)
@@ -33,7 +33,7 @@ def receive_all_decrypted(sock):
 
 # send the first complete message instead of return
 # an optional argument target is included for sending to another destination (relaying)
-def receive_all_to_target(sock, target = None):
+def receive_all_to_target(sock, messageInterval, target = None):
 	file_name = receive_all_decrypted(sock)
 	file_length = get_length(sock)
 	len_left_over = file_length
@@ -55,7 +55,7 @@ def receive_all_to_target(sock, target = None):
 		else: # file 
 			target.write(received)
 		len_left_over -= len(received)
-		time.sleep(0.015)
+		time.sleep(messageInterval)
 	sock.settimeout(None)
 
 	if type(target) != socket._socketobject:
@@ -80,7 +80,7 @@ def send_all_encrypted(sock, message):
 
 
 # send the whole file content piece by piece without encryption
-def send_all_from_file(sock, file_name):
+def send_all_from_file(sock, file_name, messageInterval):
 	send_all_encrypted(sock, file_name)
 	with open(file_name,'r') as f:
 		file_content = f.read()
@@ -88,4 +88,4 @@ def send_all_from_file(sock, file_name):
 	sock.sendall(header)
 	for i in range(0, len(file_content), SIZE):
 		sock.sendall(file_content[i:i+SIZE])
-		time.sleep(0.015)
+		time.sleep(messageInterval)

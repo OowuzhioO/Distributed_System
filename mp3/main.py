@@ -103,7 +103,7 @@ class Timer(object):
 ### Heartbeat failure detector object ###
 class heartbeat_detector(object):
 	#  added membList and changed host name, tFail
-	def __init__(self, hostName, VM_DICT,tFail, tick ,introList,port, randomthreshold, num_N =3):
+	def __init__(self, hostName, VM_DICT,tFail, tick ,introList,port, randomthreshold, messageInterval, num_N =3):
 		## input hostName -- this node's host name e.g 'fa17-cs425-g48-01.cs.illinois.edu'
 		## VM_DICT -- mapping host name to node name
 		## tFail -- FD detector protocal period time
@@ -122,6 +122,8 @@ class heartbeat_detector(object):
 		self.bufsize = 4096
 		# membership list, stored within the node to keep track of heartbeating and active members
 		self.membList = defaultdict(dict)
+		# messageInterval, time to rest when sending/receiving file 200KB a piece
+		self.messageInterval = messageInterval
 
 		# misc settings
 		self.tFail = tFail
@@ -425,7 +427,7 @@ class heartbeat_detector(object):
 		self.t_hb.daemon=True
 		self.t_hb.start()
 
-		self.file_sys = distributed_file_system(self.hostName, self.groupID, self.VM_DICT, self.membList)
+		self.file_sys = distributed_file_system(self.hostName, self.groupID, self.VM_DICT, self.membList, self.messageInterval)
 
 	def multicast_stopSignal(self):
 		leave = self.encodeMsg(self.leave)
@@ -456,6 +458,7 @@ if __name__ == '__main__':
 	parser.add_argument("--tic",'-t',type=float, default=0.5)
 	parser.add_argument("--neighbors",'-n', type=int,default=3)
 	parser.add_argument("--randomthreshold",'-r', type=float,default=0)
+	parser.add_argument("--messageInterval",'-i', type=float, default=0.012)
 
 
 
@@ -507,7 +510,8 @@ if __name__ == '__main__':
 							introList=VM_INTRO,
 							port=args.port,
 							num_N=args.neighbors,
-							randomthreshold = args.randomthreshold)
+							randomthreshold = args.randomthreshold,
+							messageInterval = args.messageInterval)
 
 	monitor = threading.Thread(target=hbd.monitor)
 	monitor.daemon=True

@@ -50,10 +50,9 @@ class Timer(object):
 ### main object ###
 class distributed_file_system(object):
 	#  added membList 
-	def __init__(self, hostName, groupID, VM_DICT, membList, w_quorum =3, r_quorum = 2):
+	def __init__(self, hostName, groupID, VM_DICT, membList, messageInterval, w_quorum =3, r_quorum = 2):
 		## input hostName -- this node's group id after joining
 		## VM_DICT -- mapping host name to node name
-
 		self.hostName=hostName
 		self.VM_DICT = VM_DICT
 		self.VM_INV = {v:k for k,v in VM_DICT.items()} # inverse dict of VM_DICT
@@ -64,6 +63,7 @@ class distributed_file_system(object):
 		# However can't change it and should not use it to check churn
 		# Instead each churn should call the corresponding function of this class
 		self.membList = membList
+		self.messageInterval = messageInterval
 
 		# a list of information about file
 		self.global_file_info = {} # each element is filename: [latest update time, list of nodes storing the file]
@@ -133,7 +133,7 @@ class distributed_file_system(object):
 				if rmtHost == self.hostName:
 					filename = str(receive_all_decrypted(conn))
 				else:
-					filename, _ = receive_all_to_target(conn)
+					filename, _ = receive_all_to_target(conn, self.messageInterval)
 				logging.info(stampedMsg('receiving file {} from {}'.format(filename, rmtHost)))
 				self.local_file_info[filename] = datetime.datetime.now().isoformat()
 				if filename in self.global_file_info: 
@@ -151,7 +151,7 @@ class distributed_file_system(object):
 
 			elif message == self.message_ask_file:
 				filename = receive_all_decrypted(conn)
-				send_all_from_file(conn, filename)
+				send_all_from_file(conn, filename, self.messageInterval)
 
 			elif message == self.message_delete_data:
 				filename = receive_all_decrypted(conn)
@@ -272,7 +272,7 @@ class distributed_file_system(object):
 			if target == self.groupID:
 				send_all_encrypted(sock, filename)
 			else:
-				send_all_from_file(sock, filename)
+				send_all_from_file(sock, filename, self.messageInterval)
 			logging.debug(stampedMsg('{} pushing file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
 
 	# return the most recent node for polling result
@@ -294,7 +294,7 @@ class distributed_file_system(object):
 		target_host, target_nodeName, sock = self.getParams(target)
 		send_all_encrypted(sock, self.message_ask_file)
 		send_all_encrypted(sock, filename)
-		_ , file_length = receive_all_to_target(sock)
+		_ , file_length = receive_all_to_target(sock, self.messageInterval)
 		return file_length
 
 
