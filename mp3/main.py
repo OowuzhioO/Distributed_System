@@ -543,6 +543,9 @@ if __name__ == '__main__':
 						if not confirm:
 							print 
 						print '........  Quiting  ........'
+						if args.displayTime:
+							endTime = datetime.datetime.now()
+							print('Time elapsed: ' + str(endTime - startTime))
 						continue
 				print 'File {} Uploaded'.format(filename)
 				if args.displayTime:
