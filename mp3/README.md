@@ -6,9 +6,9 @@ We are using Python 2, so no compilation is required.
 
 ## Execution
 Start by calling `python main.py`  
-An introducer (either *fa17-cs425-g48-01.cs.illinois.edu* or *fa17-cs425-g48-01.cs.illinois.edu*) is required to join first in order to make new node join.  
+An introducer (either *fa17-cs425-g48-01.cs.illinois.edu* or *fa17-cs425-g48-02.cs.illinois.edu*) is required to join first in order to make new node join.  
 Here is the complete instruction set:  
-
+```
 delete <filename> : delete file in DFS  
 get    <filename> : download file from DFS  
 help              : display possible cmds  
@@ -20,6 +20,7 @@ misc              : display misc info
 put <filename>    : upload file to DFS  
 self              : list self's id  
 store             : list the set of filenames stored here  
+```
   
 Press Ctrl-C to simulate a failure
 
