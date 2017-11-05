@@ -66,7 +66,7 @@ class distributed_file_system(object):
 
 		# a list of information about file
 		self.global_file_info = {} # each element is filename: [latest update time, list of nodes storing the file]
-		self.local_file_info = {} # each element is  filename: [timestamp when receiving this file]
+		self.local_file_info = {} # each element is  filename: timestamp corresponds to this file
 		self.timer = Timer() # use custimized timer instead of time.time
 
 		self.w_quorum = w_quorum
@@ -74,7 +74,8 @@ class distributed_file_system(object):
 
 		# initlize group id, later to be changed by self.joinGrp()
 		self.groupID = groupID
-		# message types
+		# .....................Message Types......................
+		# Each helper method would use one of these, and servers provide corresponding functionality
 		self.message_file = 'The following is for file content'
 		self.message_data = 'Following is information of new file'
 		self.message_ask_time = 'Please give me the last update time for the following file'
@@ -131,15 +132,17 @@ class distributed_file_system(object):
 				if rmtHost == self.hostName:
 					filename = str(receive_all_decrypted(conn))
 				else:
-					filename = receive_all_to_target(conn)
+					filename, _ = receive_all_to_target(conn)
 				logging.info(stampedMsg('receiving file {} from {}'.format(filename, rmtHost)))
 				self.local_file_info[filename] = datetime.datetime.now().isoformat()
+				if filename in self.global_file_info: 
+					self.global_file_info[filename][0] = self.timer.toc()
 
 			elif message == self.message_data: # ....
 				filename, file_nodes = receive_all_decrypted(conn)
 				filename = str(filename) # get rid of annoying utf-encoding prefix
 				file_nodes = list(map(str, file_nodes))
-				self.global_file_info[filename] = (self.timer.toc(), file_nodes) # time should sent over instead of local
+				self.global_file_info[filename] = [self.timer.toc(), file_nodes] 
 
 			elif message == self.message_ask_time:
 				filename = receive_all_decrypted(conn)
@@ -162,15 +165,12 @@ class distributed_file_system(object):
 						os.remove(filename)
 					except:
 						logging.debug(stampedMsg('Deleting file {} failed'.format(filename)))
-					# Let's leave the real file there for now .....
 
 		return None 
 
 	# Below are 3 main function for accessing/modifying DFS: put/get/delete
 
 	def putFile(self, filename, conflict = False):
-		# failed should be passed as a groupID
-		# use should use a temporary file for consistency (e.g. error in middle of transmission)
 		if (filename in self.global_file_info):
 			# broadcast to that group
 			last_update_time, owner_nodes = self.global_file_info[filename]
@@ -178,6 +178,7 @@ class distributed_file_system(object):
 				return False
 			target_processes = [node for node in owner_nodes if node != self.groupID]
 			self.broadCastFile(target_processes, filename)
+			self.global_file_info[filename][0] = self.timer.toc()
 			# simple synchronization assumption
 			
 
@@ -197,10 +198,7 @@ class distributed_file_system(object):
 			replicas_nodes = self.global_file_info[filename][-1]
 			target_nodes = random.sample(replicas_nodes, min(self.r_quorum, len(replicas_nodes)))
 			target = self.mostRecentNode(target_nodes, filename)
-			self.askForFile(target, filename)
-			return True 
-		else:
-			return False
+			return self.askForFile(target, filename)
 
 
 	def deleteFile(self, filename):
@@ -251,7 +249,7 @@ class distributed_file_system(object):
 		return target_host, target_nodeName, sock 
 
 
-	# target should be in membershiplist key format (groupID)
+
 	def broadCastData(self, targets, data):
 		for target in targets:
 			try:
@@ -263,7 +261,7 @@ class distributed_file_system(object):
 
 		logging.debug(stampedMsg('broadCast Data: {}'.format(data)))
 
-	# target should be in membershiplist key format (groupID)
+
 	def broadCastFile(self, targets, filename):
 		for target in targets:
 			target_host, target_nodeName, sock = self.getParams(target)
@@ -289,11 +287,12 @@ class distributed_file_system(object):
 
 	def askForFile(self, target, filename):
 		if target == self.groupID:
-			return
+			return os.path.getsize(filename)
 		target_host, target_nodeName, sock = self.getParams(target)
 		send_all_encrypted(sock, self.message_ask_file)
 		send_all_encrypted(sock, filename)
-		receive_all_to_target(sock)
+		_ , file_length = receive_all_to_target(sock)
+		return file_length
 
 
 	def broadCastData_delete(self, targets, data): # in this case, data is just filename
@@ -304,7 +303,7 @@ class distributed_file_system(object):
 
 		logging.debug(stampedMsg('broadCast file data deletion: {}'.format(data)))
 
-	# target should be in membershiplist key format (groupID)
+
 	def broadCastFile_delete(self, targets, filename):
 		for target in targets:
 			target_host, target_nodeName, sock = self.getParams(target)

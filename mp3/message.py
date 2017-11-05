@@ -35,7 +35,8 @@ def receive_all_decrypted(sock):
 # an optional argument target is included for sending to another destination (relaying)
 def receive_all_to_target(sock, target = None):
 	file_name = receive_all_decrypted(sock)
-	len_left_over = get_length(sock)
+	file_length = get_length(sock)
+	len_left_over = file_length
 	if type(target) == socket._socketobject:
 		send_all_encrypted(file_name)
 		target.sendall(str(len_left_over).zfill(BYTES_INT))
@@ -58,7 +59,7 @@ def receive_all_to_target(sock, target = None):
 
 	if type(target) != socket._socketobject:
 		target.close()
-	return str(file_name)
+	return str(file_name), file_length
 
 
 

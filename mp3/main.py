@@ -6,7 +6,7 @@ from time import localtime, strftime
 import time
 import logging
 
-import os, sys
+import os, sys, select
 import os.path as osp
 import argparse
 import struct
@@ -15,7 +15,7 @@ import json # for serialize heatbeat messages
 import pdb
 import pprint
 import random
-from mp3 import distributed_file_system
+from dfs import distributed_file_system
 
 
 VM_DICT={}
@@ -526,10 +526,15 @@ if __name__ == '__main__':
 				print str_not_joined
 			elif os.path.exists(filename):
 				if not hbd.file_sys.putFile(filename):
-					if raw_input('There is a write-write conflict. Enter yes to continue: ').strip().lower() == 'yes':
+					sys.stdout.write('There is a write-write conflict. Enter yes to continue: ')
+					sys.stdout.flush()
+					confirm, _ , _ = select.select([sys.stdin], [], [], 30)
+					if confirm and sys.stdin.readline().strip().lower() == 'yes':
 						hbd.file_sys.putFile(filename, True)
 					else:
-						print('.....  Quiting ......')
+						if not confirm:
+							print 
+						print '........  Quiting  ........'
 						continue
 				print 'File {} Uploaded'.format(filename)
 			else:
@@ -541,8 +546,9 @@ if __name__ == '__main__':
 			if hbd.file_sys == None:
 				print str_not_joined
 			else:
-				if hbd.file_sys.getFile(filename):
-					print 'File {} Downloaded'.format(filename)
+				file_length = hbd.file_sys.getFile(filename)
+				if file_length != None:
+					print 'File {} Downloaded with size {}'.format(filename, file_length)
 				else:
 					print 'File {} does not exist'.format(filename)
 			continue
