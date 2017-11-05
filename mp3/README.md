@@ -23,7 +23,7 @@ self              : list self's id
 store             : list the set of filenames stored here  
 ```
   
-There are also many arguments provided, mainly for debugging purpose
+There are also many arguments provided, mainly for debugging purpose  
 Press Ctrl-C to simulate a failure
 
 ## Files
