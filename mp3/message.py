@@ -55,7 +55,7 @@ def receive_all_to_target(sock, target = None):
 		else: # file 
 			target.write(received)
 		len_left_over -= len(received)
-		time.sleep(0.05)
+		time.sleep(0.015)
 	sock.settimeout(None)
 
 	if type(target) != socket._socketobject:
@@ -88,4 +88,4 @@ def send_all_from_file(sock, file_name):
 	sock.sendall(header)
 	for i in range(0, len(file_content), SIZE):
 		sock.sendall(file_content[i:i+SIZE])
-		time.sleep(0.05)
+		time.sleep(0.015)
