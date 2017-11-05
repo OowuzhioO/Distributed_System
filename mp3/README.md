@@ -1,5 +1,5 @@
 ## Contributed project
-We are using MP2 Best Solutions from group 57. (Thanks!)
+We are using MP2 Best Solutions from group 57. (Thanks!)  
 We are borrowing our old MP1 for debugging (i.e. grep logs)
 
 ## Language
