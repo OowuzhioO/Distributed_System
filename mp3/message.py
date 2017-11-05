@@ -1,18 +1,18 @@
 import json
 import socket
 import os
+import time
 
 SERVER_PORT = 3255
 HOSTS = ['fa17-cs425-g48-'+ "%02d"%machine_num +'.cs.illinois.edu' for machine_num in range(1,11)]
 BYTES_INT = 16 # limit the max file size
-SIZE = 8192 # limit each packet receive size
+SIZE = 131072 # limit each packet receive size
 
 def encoded(message):
 	return json.dumps(message)
 
 def decoded(message):
 	return json.loads(message)
-
 
 
 def return_all_received(sock, length):
@@ -55,6 +55,7 @@ def receive_all_to_target(sock, target = None):
 		else: # file 
 			target.write(received)
 		len_left_over -= len(received)
+		time.sleep(0.05)
 	sock.settimeout(None)
 
 	if type(target) != socket._socketobject:
@@ -85,4 +86,6 @@ def send_all_from_file(sock, file_name):
 		file_content = f.read()
 	header = fill_header(len(file_content))
 	sock.sendall(header)
-	sock.sendall(file_content)
+	for i in range(0, len(file_content), SIZE):
+		sock.sendall(file_content[i:i+SIZE])
+		time.sleep(0.05)

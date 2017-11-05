@@ -238,6 +238,7 @@ class distributed_file_system(object):
 				replicas.remove(failed_process)
 				if len(replicas) > 0 and self.groupID == replicas[0]:
 					self.replicate(failed_process, replicas, file)
+					time.sleep(0.5)
 
 
 
