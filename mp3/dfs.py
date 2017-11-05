@@ -17,6 +17,7 @@ import pdb
 import pprint
 import datetime
 import random
+import copy
 
 
 VM_DICT={} # simple convert vm name to simple names
@@ -230,7 +231,8 @@ class distributed_file_system(object):
 	def onProcessFail(self, failed_process):
 		# do re-replication
 		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
-		for file, infos in self.global_file_info.items():
+		copied_global_info = copy.deepcopy(self.global_file_info.items())
+		for file, infos in copied_global_info:
 			replicas = infos[-1]
 			if failed_process in replicas:
 				replicas.remove(failed_process)
