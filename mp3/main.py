@@ -4,6 +4,7 @@ import threading
 import subprocess
 from time import localtime, strftime
 import time
+import datetime
 import logging
 
 import os, sys, select
@@ -309,6 +310,7 @@ class heartbeat_detector(object):
 					logging.info("{} will be deleted from membership list".format(i))
 					self.membList.pop(i)
 					self.file_sys.onProcessFail(i)
+
 			# if tFail was not exceeded
 			elif self.membList[i]['isFailure']:
 				logging.info("{} was labeled failed but has responded again".format(i))
@@ -458,7 +460,8 @@ if __name__ == '__main__':
 	parser.add_argument("--tic",'-t',type=float, default=0.5)
 	parser.add_argument("--neighbors",'-n', type=int,default=3)
 	parser.add_argument("--randomthreshold",'-r', type=float,default=0)
-	parser.add_argument("--messageInterval",'-i', type=float, default=0.012)
+	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
+	parser.add_argument("--displayTime", '-d', action='store_true')
 
 
 
@@ -523,12 +526,13 @@ if __name__ == '__main__':
 	str_not_joined = 'Not yet joined the system'
 	while True:
 		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ').strip()
-
 		if cmd[:4].lower() == 'put ':
 			filename = cmd[4:]
 			if hbd.file_sys == None:
 				print str_not_joined
 			elif os.path.exists(filename):
+				if args.displayTime:
+					startTime = datetime.datetime.now()
 				if not hbd.file_sys.putFile(filename):
 					sys.stdout.write('There is a write-write conflict. Enter yes to continue: ')
 					sys.stdout.flush()
@@ -541,6 +545,9 @@ if __name__ == '__main__':
 						print '........  Quiting  ........'
 						continue
 				print 'File {} Uploaded'.format(filename)
+				if args.displayTime:
+					endTime = datetime.datetime.now()
+					print('Time elapsed: ' + str(endTime - startTime))
 			else:
 				print 'File {} does not exist'.format(filename)
 			continue
@@ -550,11 +557,17 @@ if __name__ == '__main__':
 			if hbd.file_sys == None:
 				print str_not_joined
 			else:
+				if args.displayTime:
+					startTime = datetime.datetime.now()
 				file_length = hbd.file_sys.getFile(filename)
 				if file_length != None:
 					print 'File {} Downloaded with size {}'.format(filename, file_length)
+					if args.displayTime:
+						endTime = datetime.datetime.now()
+						print('Time elapsed: ' + str(endTime - startTime))
 				else:
 					print 'File {} does not exist'.format(filename)
+
 			continue
 
 		elif cmd[:7].lower() == 'delete ':
@@ -562,8 +575,13 @@ if __name__ == '__main__':
 			if hbd.file_sys == None:
 				print str_not_joined
 			else:
+				if args.displayTime:
+					startTime = datetime.datetime.now()
 				if hbd.file_sys.deleteFile(filename):
 					print 'File {} Deleted'.format(filename)
+					if args.displayTime:
+						endTime = datetime.datetime.now()
+						print('Time elapsed: ' + str(endTime - startTime))
 				else:
 					print 'File {} does not exist'.format(filename)
 			continue
@@ -630,5 +648,7 @@ if __name__ == '__main__':
 		# elif instr == 'monitor':
 		# 	print 'testing monitor'
 		# 	hbd.monitor()
+
+
 
 
