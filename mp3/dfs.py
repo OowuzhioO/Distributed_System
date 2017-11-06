@@ -300,7 +300,10 @@ class distributed_file_system(object):
 
 	def broadCastData_delete(self, targets, data): # in this case, data is just filename
 		for target in targets:
-			target_host, target_nodeName, sock = self.getParams(target)
+			try:
+				target_host, target_nodeName, sock = self.getParams(target)
+			except:
+				continue
 			send_all_encrypted(sock, self.message_delete_data)
 			send_all_encrypted(sock, data)
 
@@ -309,7 +312,10 @@ class distributed_file_system(object):
 
 	def broadCastFile_delete(self, targets, filename):
 		for target in targets:
-			target_host, target_nodeName, sock = self.getParams(target)
+			try:
+				target_host, target_nodeName, sock = self.getParams(target)
+			except:
+				continue
 			send_all_encrypted(sock, self.message_delete_file)
 			send_all_encrypted(sock, filename)
 			logging.debug(stampedMsg('{} asking for deletion of file {} to node {}'.format(self.nodeName, filename, target_nodeName)))
