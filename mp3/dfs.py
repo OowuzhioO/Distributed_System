@@ -231,8 +231,7 @@ class distributed_file_system(object):
 	def onProcessFail(self, failed_process):
 		# do re-replication
 		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
-		copied_global_info = copy.deepcopy(self.global_file_info.items())
-		for file, infos in copied_global_info:
+		for file, infos in self.global_file_info.items():
 			replicas = infos[-1]
 			if failed_process in replicas:
 				replicas.remove(failed_process)
