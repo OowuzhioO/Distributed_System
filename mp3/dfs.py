@@ -215,7 +215,7 @@ class distributed_file_system(object):
 	def replicate(self, failed_process, left_over_replicas, filename):
 		no_replica = [node for node in self.membList.keys() \
 			if (node not in left_over_replicas) and node != failed_process]
-		next_replica = random.sample(no_replica, min(1, len(no_replica))) # empty list or size 1
+		next_replica = random.sample(no_replica, min(self.w_quorum-len(left_over_replicas), len(no_replica))) # empty list or size 1
 		try:
 			self.broadCastFile(next_replica, filename)
 		except: # 2 simultaneous fail
