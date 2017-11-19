@@ -24,15 +24,17 @@ class Driver(object):
 
 		self.role = 'unknown'
 		self.filename = None
+		self.task_id = -1
 
 	def drive(self):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
 		queue = Queue()
-		self.input_task = Process(target=self.get_input, args=(queue, newstdin,))
+
+		self.input_task = Process(target=self.get_input, args=(newstdin, queue))
 		self.input_task.daemon = True
 		self.input_task.start()
 
-		self.server_task = Process(target=self.background_server)
+		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.daemon = True
 		self.server_task.start()
 
@@ -40,8 +42,12 @@ class Driver(object):
 
 		if (self.role == 'client'):
 			self.start_as_client()
+		elif (self.role == 'master'):
+			self.start_as_master()
+		elif (self.role == 'worker'):
+			self.start_as_worker()
 
-	def get_input(self, queue, newstdin):
+	def get_input(self, newstdin, queue):
 		sys.stdin = newstdin
 		input_ready = False
 		while(not input_ready):
@@ -65,7 +71,7 @@ class Driver(object):
 
 		queue.put((task_id, filename, 'client'))
 
-	def background_server(self):
+	def background_server(self, queue):
 		# a monitor receive message, check and response, also multicase failure message
 		self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -82,13 +88,15 @@ class Driver(object):
 				self.input_task.terminate()
 				print
 
+				self.task_id = receive_all_decrypted(conn)
+
 				real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
 				self.masters_workers = [host for host in real_members if host != rmtHost]
 				
 				if self.host_name == self.masters_workers[0]:
 					self.role = 'master'
 					self.filename , _ = receive_all_to_target(conn, self.messageInterval)
-					self.start_as_master()
+					
 
 				elif self.host_name == self.masters_workers[1]:
 					self.role = 'standby'
@@ -96,7 +104,9 @@ class Driver(object):
 
 				else:
 					self.role = 'worker'
-					self.start_as_worker()
+
+
+				queue.put((self.task_id, self.filename, self.role))
 
 		# helper function to reduce code redundancy/duplication
 	def getParams(self, target):
@@ -115,6 +125,7 @@ class Driver(object):
 		for host_name in self.masters_workers:
 			target_host, sock = self.getParams(host_name)
 			send_all_encrypted(sock, self.message_input)
+			send_all_encrypted(sock, self.task_id)
 			if len(self.masters_workers)>0 and host_name == self.masters_workers[0]:
 				send_all_from_file(sock, self.filename, self.messageInterval)
 
@@ -137,7 +148,6 @@ if __name__ == '__main__':
 	ports = 2222, 3333, 4444, 5555, 6666, 7777
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--port",'-p', type=int,default=8001)
 	parser.add_argument("--verbose", '-v', action='store_true')
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
@@ -171,11 +181,6 @@ if __name__ == '__main__':
 	logging.basicConfig(format='%(levelname)s:%(message)s', filename=FD_log_dir,level=loggingLevel)
 	
 
-	#Start FD program
-	# a FD program should have 2 operations, join and leave the group
-	#	upon join, this node to identify itself to one of active introducers, and recieve an active membership list of its topological neighbors
-	#   upon leave, this node should send a clean up message to memebers on its list and mark itself as leave
-	#   upon initlaization, introducer should setup the group
 	hbd = heartbeat_detector(hostName=socket.gethostname(),
 							VM_DICT=VM_DICT,
 							tFail = 1.5,
