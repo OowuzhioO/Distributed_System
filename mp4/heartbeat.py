@@ -104,12 +104,13 @@ class Timer(object):
 ### Heartbeat failure detector object ###
 class heartbeat_detector(object):
 	#  added membList and changed host name, tFail
-	def __init__(self, hostName, VM_DICT,tFail, tick ,introList,port, randomthreshold, messageInterval, num_N =3):
+	def __init__(self, hostName, VM_DICT,tFail, tick ,introList,port, randomthreshold, messageInterval, dfsPort, num_N =3):
 		## input hostName -- this node's host name e.g 'fa17-cs425-g48-01.cs.illinois.edu'
 		## VM_DICT -- mapping host name to node name
 		## tFail -- FD detector protocal period time
 		## introList -- pre-selected introducer list by node names
 		self.file_sys = None
+		self.dfsPort = dfsPort
 
 		self.hostName=hostName
 		self.VM_DICT = VM_DICT
@@ -429,7 +430,7 @@ class heartbeat_detector(object):
 		self.t_hb.daemon=True
 		self.t_hb.start()
 
-		self.file_sys = distributed_file_system(self.hostName, self.groupID, self.VM_DICT, self.membList, self.messageInterval)
+		self.file_sys = distributed_file_system(self.hostName, self.groupID, self.VM_DICT, self.membList, self.messageInterval, self.dfsPort)
 
 	def multicast_stopSignal(self):
 		leave = self.encodeMsg(self.leave)
@@ -448,210 +449,4 @@ class heartbeat_detector(object):
 			sys.exit()
 		else:
 			print 'node not join yet'
-
-#-------------------------------------------------------------------------------main-----------------------------------------------------------------------------------
-if __name__ == '__main__':
-	#attemp to add a port changing argument 
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--port",'-p', type=int,default=8001)
-	parser.add_argument("--verbose", '-v', action='store_true')
-	parser.add_argument("--cleanLog", '-c', action='store_true')
-	parser.add_argument("--tFail",'-T',type=float, default=1.5)
-	parser.add_argument("--tic",'-t',type=float, default=0.5)
-	parser.add_argument("--neighbors",'-n', type=int,default=3)
-	parser.add_argument("--randomthreshold",'-r', type=float,default=0)
-	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
-	parser.add_argument("--displayTime", '-d', action='store_true')
-
-
-
-	args = parser.parse_args()
-
-	# update VM ip with node id
-	VM_DICT.update(OrderedDict({'fa17-cs425-g48-%02d.cs.illinois.edu'%i:'Node%02d'%i for i in range(1,11)}))
-	
-	# manually assign two introducers
-	VM_INTRO = ['Node01','Node02']
-	if socket.gethostname() == 'raamac3147': # debug on my machine
-		VM_INTRO.append('localhost')
-
-
-	# protocal period time setting
-	# tFail = 1.5 # time out interval in second
-	# tick = 0.5 # heartbeat ticking interval, also in second
-	tFail = args.tFail
-	tick  = args.tic
-
-
-	# setup logger for membership list and heartbeating count
-	# failure detector log directory
-	FD_dir = './FD_log'
-	if not osp.exists(FD_dir): os.makedirs(FD_dir)
-	FD_log_file = 'log.txt'
-	FD_log_dir = osp.join(FD_dir,FD_log_file)
-	# create DS log collector if not exists
-	if not os.path.exists(FD_log_dir):
-		file = open(FD_log_dir, 'w+')
-	elif args.cleanLog:
-		os.remove(FD_log_dir)
-		file = open(FD_log_dir, 'w+')
-
-
-	loggingLevel = logging.DEBUG if args.verbose else logging.INFO
-	logging.basicConfig(format='%(levelname)s:%(message)s', filename=FD_log_dir,level=loggingLevel)
-	
-
-	#Start FD program
-	# a FD program should have 2 operations, join and leave the group
-	#	upon join, this node to identify itself to one of active introducers, and recieve an active membership list of its topological neighbors
-	#   upon leave, this node should send a clean up message to memebers on its list and mark itself as leave
-	#   upon initlaization, introducer should setup the group
-	hbd = heartbeat_detector(hostName=socket.gethostname(),
-							VM_DICT=VM_DICT,
-							tFail = tFail,
-							tick = tick,
-							introList=VM_INTRO,
-							port=args.port,
-							num_N=args.neighbors,
-							randomthreshold = args.randomthreshold,
-							messageInterval = args.messageInterval)
-
-	monitor = threading.Thread(target=hbd.monitor)
-	monitor.daemon=True
-	monitor.start()
-
-
-	#keep the program going
-	instr = FDinstruction()
-	str_not_joined = 'Not yet joined the system'
-	while True:
-		cmd = raw_input('input FD detector command ( use \'help\' for instruction): ').strip()
-		if cmd[:4].lower() == 'put ':
-			filename = cmd[4:]
-			if hbd.file_sys == None:
-				print str_not_joined
-			elif os.path.exists(filename):
-				if args.displayTime:
-					startTime = datetime.datetime.now()
-				if not hbd.file_sys.putFile(filename):
-					sys.stdout.write('There is a write-write conflict. Enter yes to continue: ')
-					sys.stdout.flush()
-					confirm, _ , _ = select.select([sys.stdin], [], [], 30)
-					if confirm and sys.stdin.readline().strip().lower() == 'yes':
-						hbd.file_sys.putFile(filename, True)
-					else:
-						if not confirm:
-							print 
-						print '........  Quiting  ........'
-						if args.displayTime:
-							endTime = datetime.datetime.now()
-							print('Time elapsed: ' + str(endTime - startTime))
-						continue
-				print 'File {} Uploaded'.format(filename)
-				if args.displayTime:
-					endTime = datetime.datetime.now()
-					print('Time elapsed: ' + str(endTime - startTime))
-			else:
-				print 'File {} does not exist'.format(filename)
-			continue
-
-		elif cmd[:4].lower() == 'get ':
-			filename = cmd[4:]
-			if hbd.file_sys == None:
-				print str_not_joined
-			else:
-				if args.displayTime:
-					startTime = datetime.datetime.now()
-				file_length = hbd.file_sys.getFile(filename)
-				if file_length != None:
-					print 'File {} Downloaded with size {}'.format(filename, file_length)
-					if args.displayTime:
-						endTime = datetime.datetime.now()
-						print('Time elapsed: ' + str(endTime - startTime))
-				else:
-					print 'File {} does not exist'.format(filename)
-
-			continue
-
-		elif cmd[:7].lower() == 'delete ':
-			filename = cmd[7:]
-			if hbd.file_sys == None:
-				print str_not_joined
-			else:
-				if args.displayTime:
-					startTime = datetime.datetime.now()
-				if hbd.file_sys.deleteFile(filename):
-					print 'File {} Deleted'.format(filename)
-					if args.displayTime:
-						endTime = datetime.datetime.now()
-						print('Time elapsed: ' + str(endTime - startTime))
-				else:
-					print 'File {} does not exist'.format(filename)
-			continue
-
-
-
-		elif cmd[:3].lower() == 'ls ':
-			filename = cmd[3:]
-			if hbd.file_sys == None:
-				print str_not_joined
-			else:
-				target_file_info =  hbd.file_sys.global_file_info.get(filename)
-				if target_file_info == None:
-					print 'There is no such file under the system'
-				else:
-					print 'Nodes containing this file: '
-					pprint.pprint(target_file_info[-1])
-			continue
-
-		if cmd not in instr.keys():
-			pprint.pprint(instr)
-			continue
-
-		if cmd == 'help':
-			pprint.pprint(instr)
-
-		elif cmd == 'store':
-			if hbd.file_sys == None:
-				print 'Not yet joined the group'
-			else:
-				print 'File stored locally: ' 
-				pprint.pprint(sorted(hbd.file_sys.local_file_info.keys()))
-
-		elif cmd == 'join':
-			print 'joining the group'
-			hbd.joinGrp()
-		elif cmd == 'leave':
-			print 'leaving the group'
-			hbd.leaveGrp()
-
-		elif cmd == 'memb':
-			print 'listing membership:'
-			pprint.pprint(sorted(hbd.membList.keys()))
-
-		elif cmd == 'self':
-			print 'print self id:', hbd.hostName, ' ({})'.format(socket.gethostbyname(hbd.hostName))
-
-		elif cmd == 'misc':
-			print 'stored membership'
-			pprint.pprint(dict(hbd.membList))
-			print 'this node\'s neighbors:'
-			pprint.pprint(sorted(hbd.neighbors))
-			if hbd.file_sys != None:
-				print 'file system local information'
-				pprint.pprint(hbd.file_sys.local_file_info)
-				print 'file system global information'
-				pprint.pprint(hbd.file_sys.global_file_info)
-
-		else:
-			if (cmd.lower() == 'put') or (cmd.lower() == 'get') or (cmd.lower() == 'delete'):
-				print 'no arg provided'
-			else:
-				print 'unrecognized cmd:{}'.format(cmd)	
-		# elif instr == 'monitor':
-		# 	print 'testing monitor'
-		# 	hbd.monitor()
-
-
-
 

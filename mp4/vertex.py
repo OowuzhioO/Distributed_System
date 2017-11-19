@@ -1,6 +1,7 @@
 class Vertex:
-	def __init__(self, neighbors, is_source, send_messages_to, vote_to_halt, edge_weight):
+	def __init__(self, vertex, neighbors, is_source, send_messages_to, vote_to_halt, edge_weight):
 		self.super_step = 0
+		self.vertex = vertex
 		self.value = None
 		self.neighbors = neighbors
 		self.is_source = is_source

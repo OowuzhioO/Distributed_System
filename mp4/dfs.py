@@ -50,7 +50,7 @@ class Timer(object):
 ### main object ###
 class distributed_file_system(object):
 	#  added membList 
-	def __init__(self, hostName, groupID, VM_DICT, membList, messageInterval, w_quorum =3, r_quorum = 2):
+	def __init__(self, hostName, groupID, VM_DICT, membList, messageInterval, port, w_quorum =3, r_quorum = 2):
 		## input hostName -- this node's group id after joining
 		## VM_DICT -- mapping host name to node name
 		self.hostName=hostName
@@ -58,7 +58,7 @@ class distributed_file_system(object):
 		self.VM_INV = {v:k for k,v in VM_DICT.items()} # inverse dict of VM_DICT
 		self.nodeName = self.VM_DICT[self.hostName]
 		self.host = socket.gethostbyname(self.hostName)
-		self.port = 5363 
+		self.port = port 
 		# membership list, passed in reference so can know the current members even within the class
 		# However can't change it and should not use it to check churn
 		# Instead each churn should call the corresponding function of this class

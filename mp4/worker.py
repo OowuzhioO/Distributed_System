@@ -56,7 +56,7 @@ class worker(object):
 
 	def work(self):
 		targetVertex = PRVertex if (task_id==0) else SPVertex
-		self.vertices = [targetVertex(out_edges[v], v==self.source, self.vertex_send_messages_to, 
+		self.vertices = [targetVertex(v, out_edges[v], v==self.source, self.vertex_send_messages_to, 
 						self.vertex_vote_to_halt, self.vertex_edge_weight) for v in self.temp_vertices]
 		while not all_halt(): #TODO
 			for v in self.vertices:
