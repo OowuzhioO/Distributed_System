@@ -80,8 +80,10 @@ class Driver(object):
 			message = receive_all_decrypted(conn) # the instruction
 			if message==self.message_input:
 				self.input_task.terminate()
+				print
 
-				self.masters_workers = [host.split('_')[0] for host in sorted(self.membList.keys()) if host.split('_')[0] != rmtHost]
+				real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
+				self.masters_workers = [host for host in real_members if host != rmtHost]
 				
 				if self.host_name == self.masters_workers[0]:
 					self.role = 'master'
@@ -107,14 +109,14 @@ class Driver(object):
 
 	def start_as_client(self):
 		print 'I am the client!'
-		self.masters_workers = [host.split('_')[0] for host in sorted(self.membList.keys()) if host.split('_')[0] != self.host_name]
+		real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
+		self.masters_workers = [host for host in real_members if host != self.host_name]
 
-		for host_name in self.membList.keys():
-			if host_name.split('_')[0] != self.host_name:
-				target_host, sock = self.getParams(host_name)
-				send_all_encrypted(sock, self.message_input)
+		for host_name in self.masters_workers:
+			target_host, sock = self.getParams(host_name)
+			send_all_encrypted(sock, self.message_input)
 			if len(self.masters_workers)>0 and host_name == self.masters_workers[0]:
-				send_all_from_file(sock, filename, self.messageInterval)
+				send_all_from_file(sock, self.filename, self.messageInterval)
 
 
 	def start_as_master(self):
