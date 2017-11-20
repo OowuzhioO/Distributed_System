@@ -33,7 +33,7 @@ def receive_all_decrypted(sock):
 
 # send the first complete message instead of return
 # an optional argument target is included for sending to another destination (relaying)
-def receive_all_to_target(sock, messageInterval, target = None):
+def receive_all_to_target(sock, messageInterval, target = None, append = False):
 	file_name = receive_all_decrypted(sock)
 	file_length = get_length(sock)
 	len_left_over = file_length
@@ -41,7 +41,8 @@ def receive_all_to_target(sock, messageInterval, target = None):
 		send_all_encrypted(file_name)
 		target.sendall(str(len_left_over).zfill(BYTES_INT))
 	else: # don't replay, send to file
-		target = open(file_name, 'w')
+		mode = 'a' if append else 'w'
+		target = open(file_name, mode)
 	received = 'enter_loop'
 
 	sock.settimeout(2) # make sure doesn't hang

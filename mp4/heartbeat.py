@@ -293,6 +293,9 @@ class heartbeat_detector(object):
 				logging.debug('**'+i)
 				logging.debug('**new node: {}'.format(self.encodeMsg(self.membList[i])))
 
+	def fail_callback(self):
+		pass
+		
 	# function to check if any node has failed
 	def check(self):	
 		#first pull out all the time 
@@ -311,6 +314,7 @@ class heartbeat_detector(object):
 					logging.info("{} will be deleted from membership list".format(i))
 					self.membList.pop(i)
 					self.file_sys.onProcessFail(i)
+					self.fail_callback(i)
 
 			# if tFail was not exceeded
 			elif self.membList[i]['isFailure']:

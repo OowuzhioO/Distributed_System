@@ -7,12 +7,12 @@ import os, time, sys, argparse
 from heartbeat import heartbeat_detector
 from message import send_all_encrypted, send_all_from_file
 from message import receive_all_decrypted, receive_all_to_target
+from master import Master
+from worker import Worker
+from time import sleep
 
-
-### Heartbeat failure detector object ###
 class Driver(object):
-	#  added membList and changed host name, tFail
-	def __init__(self, host_name, port, worker_port, master_port, membList, messageInterval=0.001):
+	def __init__(self, host_name, port, worker_port, master_port, membList, messageInterval):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
@@ -23,8 +23,10 @@ class Driver(object):
 		self.messageInterval = messageInterval
 
 		self.role = 'unknown'
+		self.master = None # make sense only if role == 'master'
 		self.filename = None
 		self.task_id = -1
+		self.commons = ('file_piece_','Preprocess Done')
 
 	def drive(self):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
@@ -38,7 +40,7 @@ class Driver(object):
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.task_id, self.filename, self.role = queue.get()
+		self.task_id, self.filename, self.role, self.masters_workers = queue.get()
 
 		if (self.role == 'client'):
 			self.start_as_client()
@@ -47,6 +49,7 @@ class Driver(object):
 		elif (self.role == 'worker'):
 			self.start_as_worker()
 
+	# assert no one fails during input time
 	def get_input(self, newstdin, queue):
 		sys.stdin = newstdin
 		input_ready = False
@@ -69,7 +72,7 @@ class Driver(object):
 			else:
 				input_ready = True
 
-		queue.put((task_id, filename, 'client'))
+		queue.put((task_id, filename, 'client', None))
 
 	def background_server(self, queue):
 		# a monitor receive message, check and response, also multicase failure message
@@ -106,7 +109,7 @@ class Driver(object):
 					self.role = 'worker'
 
 
-				queue.put((self.task_id, self.filename, self.role))
+				queue.put((self.task_id, self.filename, self.role, self.masters_workers))
 
 		# helper function to reduce code redundancy/duplication
 	def getParams(self, target):
@@ -131,14 +134,19 @@ class Driver(object):
 
 
 	def start_as_master(self):
+		#self.master = Master
 		print 'I am the master!'
-		
+		self.master = Master(self.membList, self.task_id, self.filename, self.host_name,
+							self.masters_workers, self.master_port, self.worker_port, self.port, self.commons)
+
 
 	def start_as_worker(self):
 		print 'I am the worker!'
 
 
-
+	def onProcessFail(self, failed_process):
+		if self.master != None:
+			print('I care about '+failed_process)
 
 
 
@@ -195,10 +203,14 @@ if __name__ == '__main__':
 	monitor = threading.Thread(target=hbd.monitor)
 	monitor.daemon=True
 	monitor.start()
+
 	hbd.joinGrp()
 
-	main_driver = Driver(socket.gethostname(), ports[2], worker_port=ports[3], master_port=ports[4], membList=hbd.membList)
+	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, args.messageInterval)
+	hbd.fail_callback = main_driver.onProcessFail
+
+	
 	main_driver.drive()
-
-
+	
+	
 
