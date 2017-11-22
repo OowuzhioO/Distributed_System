@@ -23,21 +23,37 @@ def binary_search(lines, target):
 
 # split files based on uniform partition on vertices
 def split_files(graph_filename, output_files):
-	with open(sys.argv[1]) as graph_file:
+	with open(graph_filename, 'r') as graph_file:
 		lines = graph_file.readlines()
 		num_pieces = len(output_files)
-		num_vertices = get_vertex(lines[-1])
-		files = [open(output,'w') for f in output_files]
+		max_vertex = get_vertex(lines[-1])
+		files = [open(f,'w') for f in output_files]
 
 		end_ix = -1
 		for file_ix in range(num_pieces): 
 			start_ix = end_ix+1
-			target = (file_ix+1)*num_vertices/num_pieces
+			target = (file_ix+1)*max_vertex/num_pieces
 			end_ix = binary_search(lines, target)
 			for line in lines[start_ix:end_ix+1]:
 				files[file_ix].write(line)
 			
 		for f in files:
 			f.close()
-		
-		
+	
+	return max_vertex
+	
+# process vertices results into 1
+def combine_files(output_filename, collected_files):
+	supersteps = []
+	should_be_sorted = []
+	with open(output_filename, 'w') as output_file:
+		lines = graph_file.readlines()
+		superstep.append(int(lines[0]))
+		should_be_sorted.append(int(lines[0].split()[0]))
+		should_be_sorted.append(int(lines[-1].split()[0]))
+
+		for line in lines[1:]:
+			output_file.write(line)
+
+	assert(len(set(supersteps)) <= 1)
+	assert(sorted(should_be_sorted)==should_be_sorted)

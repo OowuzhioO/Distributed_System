@@ -12,21 +12,28 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, master_port, membList, messageInterval):
+	def __init__(self, host_name, port, worker_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
 		self.worker_port = worker_port
 		self.master_port = master_port
 		self.membList = membList
-		self.message_input = 'User has already inputted in the following machine'
+		self.dfs = dfs
+		self.message_input = 'User has already inputted'
+		self.message_output = 'I am done with processing file'
 		self.messageInterval = messageInterval
+		self.super_step_interval = super_step_interval
+		self.result_file = result_file
 
+		self.client_ip = None
 		self.role = 'unknown'
 		self.master = None # make sense only if role == 'master'
-		self.filename = None
+		self.filename_pair = (None, None)
 		self.task_id = -1
-		self.commons = ('file_piece_','Preprocess Done')
+		self.source = -1 # source vertex
+		self.commons = ('file_piece_', 'Preprocess Done', 'Please Compute', 
+						'Compute Done', 'Result?', 'Here are the results')
 
 	def drive(self):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
@@ -40,7 +47,7 @@ class Driver(object):
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.task_id, self.filename, self.role, self.masters_workers = queue.get()
+		self.task_id, self.source, self.filename_pair, self.role, self.masters_workers, self.client_ip = queue.get()
 
 		if (self.role == 'client'):
 			self.start_as_client()
@@ -55,10 +62,11 @@ class Driver(object):
 		input_ready = False
 		while(not input_ready):
 			try:
-				task_id, filename = raw_input('Input task_id(0-PR, 1-SP) filename: ').strip().split()
+				task_id, filename, source= raw_input('Input task_id(0-PR, 1-SP) filename source: ').strip().split()
 				task_id = int(task_id)
 			except:
-				print 'Input should be in this form: 0 file'
+				print 'Input should be in this format for PR: 0 file any_input'
+				print 'Or in this format for SP: 1 file 105'
 				continue
 
 			if (task_id > 1) or (task_id < 0):
@@ -72,7 +80,7 @@ class Driver(object):
 			else:
 				input_ready = True
 
-		queue.put((task_id, filename, 'client', None))
+		queue.put((task_id, source, (filename, self.result_file), 'client', None, self.host))
 
 	def background_server(self, queue):
 		# a monitor receive message, check and response, also multicase failure message
@@ -94,59 +102,68 @@ class Driver(object):
 				self.task_id = receive_all_decrypted(conn)
 
 				real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
-				self.masters_workers = [host for host in real_members if host != rmtHost]
+				self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != rmtHost]
 				
-				if self.host_name == self.masters_workers[0]:
+				if self.host == self.masters_workers[0]:
 					self.role = 'master'
-					self.filename , _ = receive_all_to_target(conn, self.messageInterval)
+					self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
+					self.filename_pair[1] = receive_all_decrypted(conn)
+					self.source = receive_all_decrypted(conn)
 					
 
-				elif self.host_name == self.masters_workers[1]:
+				elif self.host == self.masters_workers[1]:
 					self.role = 'standby'
 					print 'I am the standby master!'
 
 				else:
 					self.role = 'worker'
 
+				queue.put((self.task_id, None, self.filename_pair, self.role, self.masters_workers, addr[0]))
 
-				queue.put((self.task_id, self.filename, self.role, self.masters_workers))
-
-		# helper function to reduce code redundancy/duplication
-	def getParams(self, target):
-		target_hostname = target.split('_')[0]
-		target_host = socket.gethostbyname(target_hostname)
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((target_host, self.port)) # call might fail
-		return target_host, sock 
+			elif message ==self.message_output:
+				filename, _ = receive_all_to_target(conn, self.messageInterval)
+				assert(filename == self.result_file)
+				print 'Task done, result is published to {}'.format(filename)
+				sys.exit()
 
 
 	def start_as_client(self):
 		print 'I am the client!'
 		real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
-		self.masters_workers = [host for host in real_members if host != self.host_name]
+		self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != self.host_name]
 
-		for host_name in self.masters_workers:
-			target_host, sock = self.getParams(host_name)
+		for host in self.masters_workers:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((host, self.port))
+
 			send_all_encrypted(sock, self.message_input)
 			send_all_encrypted(sock, self.task_id)
-			if len(self.masters_workers)>0 and host_name == self.masters_workers[0]:
-				send_all_from_file(sock, self.filename, self.messageInterval)
+			if host == self.masters_workers[0]:
+				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
+				send_all_encrypted(sock, self.filename_pair[1])
+				send_all_encrypted(sock, self.source)
 
 
 	def start_as_master(self):
 		#self.master = Master
 		print 'I am the master!'
-		self.master = Master(self.membList, self.task_id, self.filename, self.host_name,
-							self.masters_workers, self.master_port, self.worker_port, self.port, self.commons)
-
+		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
+							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
+							self.dfs, self.super_step_interval, self.commons)
+		self.master.execute()
 
 	def start_as_worker(self):
 		print 'I am the worker!'
+		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
+							self.masters_workers, self.source, self.commons)
+		self.worker.start_main_server()
+
 
 
 	def onProcessFail(self, failed_process):
 		if self.master != None:
 			print('I care about '+failed_process)
+			failed_ip = socket.gethostbyname(failed_process)
 
 
 
@@ -159,9 +176,8 @@ if __name__ == '__main__':
 	parser.add_argument("--verbose", '-v', action='store_true')
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
-	parser.add_argument("--displayTime", '-d', action='store_true')
-
-
+	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
+	parser.add_argument("--super_step", '-i', type=float, default='6.00')
 
 	args = parser.parse_args()
 	# update VM ip with node id
@@ -206,10 +222,9 @@ if __name__ == '__main__':
 
 	hbd.joinGrp()
 
-	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, args.messageInterval)
+	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hdb.dfs, 
+						args.messageInterval, args.super_step, args.output_file)
 	hbd.fail_callback = main_driver.onProcessFail
-
-	
 	main_driver.drive()
 	
 	
