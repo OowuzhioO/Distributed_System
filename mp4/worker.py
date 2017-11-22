@@ -48,7 +48,7 @@ class Worker(object):
 				u, v = int(u), int(v)
 				if u not in self.vertices:
 					neighbor_host = self.masters_workers[2+min(v*self.num_workers/self.max_vertex, self.num_workers-1)]
-					self.vertices[u] = self.targetVertex (u, [v, 1, neighbor_host]
+					self.vertices[u] = self.targetVertex (u, [v, 1, neighbor_host],
 						u==self.source_vertex, self.vertex_send_messages_to,self.vertex_edge_weight)
 				else:
 					self.vertices[u].neighbors.append(v)

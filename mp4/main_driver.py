@@ -177,7 +177,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--super_step", '-i', type=float, default='6.00')
+	parser.add_argument("--super_step", '-t', type=float, default='6.00')
 
 	args = parser.parse_args()
 	# update VM ip with node id
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
 	hbd.joinGrp()
 
-	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hdb.dfs, 
+	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hbd.file_sys, 
 						args.messageInterval, args.super_step, args.output_file)
 	hbd.fail_callback = main_driver.onProcessFail
 	main_driver.drive()

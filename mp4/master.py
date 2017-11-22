@@ -110,14 +110,14 @@ class Master:
 	def execute(self):
 		start_time = time()
 		self.preprocess()
-		print('Preprocess done, took {} seconds'.format{time()-start_time})
+		print('Preprocess done, took {} seconds'.format(time()-start_time))
 
 		start_time = time()
 		self.process()
-		print('Process done, took {} seconds'.format{time()-start_time})
+		print('Process done, took {} seconds'.format(time()-start_time))
 
 		start_time = time()
 		self.collect_results()
-		print('Results collected, took {} seconds'.format{time()-start_time})
+		print('Results collected, took {} seconds'.format(time()-start_time))
 
 	
