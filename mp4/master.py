@@ -4,6 +4,7 @@ from threading import Thread
 from time import sleep, time
 import json
 from message import receive_all_decrypted, send_all_encrypted
+import socket
 
 class Master:
 
@@ -22,7 +23,7 @@ class Master:
 		self.super_step_interval = interval
 
 		# split_filename not only for preprocess but also for results
-		self.split_filename, self.ack_preprocess, self.request_compute, 
+		self.split_filename, self.ack_preprocess, self.request_compute, \
 		self.finish_compute, self.request_result, self.ack_result = commons
 
 		self.num_preprocess_done = 0
@@ -62,8 +63,8 @@ class Master:
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.main_files = [self.split_filename+str(i+1) for i in range(num_workers)]
-		self.max_vertex = split_files(self.input_filename, main_files)
+		self.main_files = [self.split_filename+str(i+1) for i in range(self.num_workers)]
+		self.max_vertex = split_files(self.input_filename, self.main_files)
 
 		for ix in range(len(self.main_files)):
 			# put file
@@ -77,6 +78,7 @@ class Master:
 
 	def process(self):
 		self.superstep = 0
+		self.all_done = False
 		while not self.all_done:
 			self.all_done = True	
 			self.superstep += 1
@@ -85,7 +87,7 @@ class Master:
 				self.send_to_worker([self.request_compute, superstep], worker)
 
 			sleep(self.super_step_interval)
-			print('Superstep {} ended...'%self.superstep)
+			print('Superstep {} ended...'.format(self.superstep))
 
 
 	def collect_results(self):
@@ -93,13 +95,13 @@ class Master:
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([self.request_result], worker)
 
-		while (self.num_process_done < num_workers):
+		while (self.num_process_done < self.num_workers):
 			sleep(1)
 
-		for output in main_files:
+		for output in self.main_files:
 			self.dfs.getFile(output)
 
-		combine_files(self.output_filename, main_files)
+		combine_files(self.output_filename, self.main_files)
 
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.client_ip, self.driver_port))
@@ -108,6 +110,10 @@ class Master:
 		
 	# execute the task in 3 phases
 	def execute(self):
+		if (self.num_workers < 1):
+			print 'Error: No worker available'
+			return
+
 		start_time = time()
 		self.preprocess()
 		print('Preprocess done, took {} seconds'.format(time()-start_time))

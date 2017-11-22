@@ -29,7 +29,7 @@ class Driver(object):
 		self.client_ip = None
 		self.role = 'unknown'
 		self.master = None # make sense only if role == 'master'
-		self.filename_pair = (None, None)
+		self.filename_pair = [None, None]
 		self.task_id = -1
 		self.source = -1 # source vertex
 		self.commons = ('file_piece_', 'Preprocess Done', 'Please Compute', 
@@ -155,13 +155,14 @@ class Driver(object):
 	def start_as_worker(self):
 		print 'I am the worker!'
 		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
-							self.masters_workers, self.source, self.commons)
+							self.masters_workers, self.source, self.dfs, self.commons)
 		self.worker.start_main_server()
 
 
 
 	def onProcessFail(self, failed_process):
-		if self.master != None:
+		failed_process = socket.gethostbyname(failed_process.split('_')[0])
+		if self.master != None and failed_process != self.client_ip:
 			print('I care about '+failed_process)
 			failed_ip = socket.gethostbyname(failed_process)
 

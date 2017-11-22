@@ -47,7 +47,7 @@ def combine_files(output_filename, collected_files):
 	supersteps = []
 	should_be_sorted = []
 	with open(output_filename, 'w') as output_file:
-		lines = graph_file.readlines()
+		lines = output_file.readlines()
 		superstep.append(int(lines[0]))
 		should_be_sorted.append(int(lines[0].split()[0]))
 		should_be_sorted.append(int(lines[-1].split()[0]))
