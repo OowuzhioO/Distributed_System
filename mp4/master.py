@@ -31,6 +31,7 @@ class Master:
 
 
 	def send_to_worker(self, list_of_things, worker):
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		sock.sendto(json.dumps(list_of_things), (worker, self.worker_port))
 		
 
@@ -58,19 +59,19 @@ class Master:
 
 
 	def preprocess(self):
-		sleep(0.5)
+		sleep(2)
 		self.server_task = Thread(target=self.background_server)
 		self.server_task.daemon = True
 		self.server_task.start()
 
 		self.main_files = [self.split_filename+str(i+1) for i in range(self.num_workers)]
-		self.max_vertex = split_files(self.input_filename, self.main_files)
+		self.max_vertex, self.num_vertices = split_files(self.input_filename, self.main_files)
+		print(self.num_vertices)
 
 		for ix in range(len(self.main_files)):
 			# put file
 			self.dfs.putFile(self.main_files[ix])
-			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			self.send_to_worker([self.main_files[ix], self.max_vertex], self.masters_workers[ix+2])
+			self.send_to_worker([self.main_files[ix], self.max_vertex, self.num_vertices], self.masters_workers[ix+2])
 
 		while (self.num_preprocess_done < self.num_workers):
 			sleep(1)
@@ -83,8 +84,7 @@ class Master:
 			self.all_done = True	
 			self.superstep += 1
 			for worker in self.masters_workers[2:]:
-				sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-				self.send_to_worker([self.request_compute, superstep], worker)
+				self.send_to_worker([self.request_compute, self.superstep], worker)
 
 			sleep(self.super_step_interval)
 			print('Superstep {} ended...'.format(self.superstep))
@@ -103,7 +103,6 @@ class Master:
 
 		combine_files(self.output_filename, self.main_files)
 
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.client_ip, self.driver_port))
 		send_all_encrypted(sock, self.client_message)
 

@@ -185,10 +185,16 @@ class distributed_file_system(object):
 
 		else:
 			target_processes = random.sample(self.membList.keys(), min(self.w_quorum, len(self.membList)))
+			print('dfs: ' , target_processes)
 			if self.groupID not in target_processes:
 				target_processes = target_processes[1:]+[self.groupID]	
 
-			self.broadCastFile(target_processes, filename) 
+			try:
+				self.broadCastFile(target_processes, filename)
+			except:
+				time.sleep(1)
+				return self.putFile(filename, conflict)
+
 			self.broadCastData(self.membList.keys(), (filename, target_processes))
 		return True
 
@@ -230,6 +236,7 @@ class distributed_file_system(object):
 	# should be called after memList is updated
 	def onProcessFail(self, failed_process):
 		# do re-replication
+		print 'dfs detected failure from', failed_process
 		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
 		copied_global_info = copy.deepcopy(self.global_file_info.items())
 		for file, infos in copied_global_info:

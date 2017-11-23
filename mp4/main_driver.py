@@ -39,6 +39,12 @@ class Driver(object):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
 		queue = Queue()
 
+		# a monitor receive message, check and response, also multicase failure message
+		self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.server_sock.bind((self.host, self.port))
+		self.server_sock.listen(5)
+
 		self.input_task = Process(target=self.get_input, args=(newstdin, queue))
 		self.input_task.daemon = True
 		self.input_task.start()
@@ -47,8 +53,11 @@ class Driver(object):
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.task_id, self.source, self.filename_pair, self.role, self.masters_workers, self.client_ip = queue.get()
+		self.task_id, self.source, self.filename_pair, self.role, self.client_ip = queue.get()
 
+		member_ips = [socket.gethostbyname(host.split('_')[0]) for host in sorted(self.membList.keys())]
+		self.masters_workers = [host for host in member_ips if host != self.client_ip]
+		print self.masters_workers
 		if (self.role == 'client'):
 			self.start_as_client()
 		elif (self.role == 'master'):
@@ -80,16 +89,9 @@ class Driver(object):
 			else:
 				input_ready = True
 
-		queue.put((task_id, source, (filename, self.result_file), 'client', None, self.host))
+		queue.put((task_id, source, (filename, self.result_file), 'client', self.host))
 
 	def background_server(self, queue):
-		# a monitor receive message, check and response, also multicase failure message
-		self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.server_sock.bind((self.host, self.port))
-		self.server_sock.listen(5)
-		# self.monitor.listen(10) # UDP doesn't support this
-		
 		while True:
 			conn, addr = self.server_sock.accept()				
 			rmtHost= socket.gethostbyaddr(addr[0])[0]
@@ -118,7 +120,7 @@ class Driver(object):
 				else:
 					self.role = 'worker'
 
-				queue.put((self.task_id, None, self.filename_pair, self.role, self.masters_workers, addr[0]))
+				queue.put((self.task_id, None, self.filename_pair, self.role, addr[0]))
 
 			elif message ==self.message_output:
 				filename, _ = receive_all_to_target(conn, self.messageInterval)
@@ -129,6 +131,7 @@ class Driver(object):
 
 	def start_as_client(self):
 		print 'I am the client!'
+		self.server_task.daemon = False
 		real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
 		self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != self.host_name]
 
