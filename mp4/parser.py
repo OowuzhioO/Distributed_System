@@ -25,6 +25,7 @@ def binary_search(lines, target):
 def split_files(graph_filename, output_files):
 	with open(graph_filename, 'r') as graph_file:
 		lines = graph_file.readlines()
+
 		num_pieces = len(output_files)
 		max_vertex = get_vertex(lines[-1])
 		files = [open(f,'w') for f in output_files]
@@ -37,10 +38,20 @@ def split_files(graph_filename, output_files):
 			for line in lines[start_ix:end_ix+1]:
 				files[file_ix].write(line)
 			
+		num_vertices = max_vertex
+		for line in lines:
+			if line[0] != '#' and line[0] != '/':
+				break
+			targets = 'ode:','ertices:', 'ode :', 'ertices :'
+			for target in targets:
+				if target in line: 
+						num_vertices = int(line[line.index(target)+len(target):].split()[0])
+						break
+
 		for f in files:
 			f.close()
 	
-	return max_vertex
+	return max_vertex, num_vertices
 	
 # process vertices results into 1
 def combine_files(output_filename, collected_files):
