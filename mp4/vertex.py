@@ -46,7 +46,7 @@ class SPVertex(Vertex):
 
 		if (min_dist < self.value):
 			self.value = min_dist
-			for neighbor in neighbors:
+			for neighbor in self.neighbors:
 				update_val = self.edge_weight(neighbor)+min_dist
 				self.send_messages_to(neighbor, update_val, super_step)
 				
