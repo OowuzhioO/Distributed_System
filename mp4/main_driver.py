@@ -170,7 +170,6 @@ class Driver(object):
 
 	def start_as_standby(self):
 		# wait for either master fail or receiving a finished signal
-		assert not self.server_task.is_alive()
 		self.server_task = Process(target=self.background_server, args=(None,))
 		self.server_task.start() 
 
