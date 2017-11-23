@@ -84,6 +84,8 @@ class distributed_file_system(object):
 		self.message_delete_data = 'Please delete the infomration of this file'
 		self.message_delete_file = 'Please delete the current content of this file'
 
+		self.failed_processes = []
+
 		monitor = threading.Thread(target=self.server_task)
 		monitor.daemon=True
 		monitor.start()
@@ -214,26 +216,16 @@ class distributed_file_system(object):
 
 
 	def replicate(self, failed_process, left_over_replicas, filename):
+		self.failed_processes.append(failed_process)
 		no_replica = [node for node in self.membList.keys() \
-			if (node not in left_over_replicas) and node != failed_process]
+			if (node not in left_over_replicas) and (node not in failed_process)]
 		next_replica = random.sample(no_replica, min(self.w_quorum-len(left_over_replicas), len(no_replica))) # empty list or size 1
 		try:
 			self.broadCastFile(next_replica, filename)
-		except: # 2 simultaneous fail
-			no_replica = [node for node in no_replica if node != next_replica]
-			next_replica = random.sample(no_replica, min(1, len(no_replica)))
-			self.broadCastFile(next_replica, filename)
-		finally:
 			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
-
-
-	def super_safe_replicate(self, failed_process, left_over_replicas, filename):
-		try:
-			self.replicate(failed_process, left_over_replicas, filename)
-		except:
-			time.sleep(1)
-			print('dfs Rereplicate again?')
-			self.super_safe_replicate(failed_process, left_over_replicas, filename)
+		except: # 2 simultaneous fail
+			print('Unable to replicate this time')
+			
 
 
 	# Need to be called for replication of metadata on time
@@ -251,7 +243,7 @@ class distributed_file_system(object):
 				except:
 					pass
 				if len(replicas) > 0 and self.groupID == replicas[0]:
-					self.super_safe_replicate(failed_process, replicas, file)
+					self.replicate(failed_process, replicas, file)
 					time.sleep(0.5)
 
 

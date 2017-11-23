@@ -50,10 +50,8 @@ class Driver(object):
 		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.start()
 
-		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip = queue.get()
+		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip, self.masters_workers = queue.get()
 
-		member_ips = [socket.gethostbyname(host.split('_')[0]) for host in sorted(self.membList.keys())]
-		self.masters_workers = [host for host in member_ips if host != self.client_ip]
 		if (self.role == 'client'):
 			self.start_as_client()
 		elif (self.role == 'master'):
@@ -96,7 +94,7 @@ class Driver(object):
 			else:
 				input_ready = True
 
-		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host))
+		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host, None))
 
 	def background_server(self, queue):
 		conn, addr = self.server_sock.accept()				
@@ -110,9 +108,7 @@ class Driver(object):
 
 			self.task_id = receive_all_decrypted(conn)
 			self.key_number = receive_all_decrypted(conn)
-
-			real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
-			self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != rmtHost]
+			self.masters_workers = receive_all_decrypted(conn)
 			
 			if self.host == self.masters_workers[0]:
 				self.role = 'master'
@@ -127,7 +123,7 @@ class Driver(object):
 			else:
 				self.role = 'worker'
 
-			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0]))
+			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0], self.masters_workers))
 
 
 		elif message == self.message_output: # for client
@@ -139,7 +135,9 @@ class Driver(object):
 
 	def start_as_client(self):
 		print 'I am the client!'
+		sleep(0.5)
 		real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
+		print 'All members: {}'.format(real_members)
 		self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != self.host_name]
 
 		for host in self.masters_workers:
@@ -149,6 +147,7 @@ class Driver(object):
 			send_all_encrypted(sock, self.message_input)
 			send_all_encrypted(sock, self.task_id)
 			send_all_encrypted(sock, self.key_number)
+			send_all_encrypted(sock, self.masters_workers)
 			if host == self.masters_workers[0]:
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
@@ -243,7 +242,6 @@ if __name__ == '__main__':
 						args.messageInterval, args.super_step, args.output_file)
 	hbd.fail_callback = main_driver.onProcessFail
 	
-	sleep(1)
 	main_driver.drive()
 	
 	
