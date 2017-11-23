@@ -40,7 +40,7 @@ def split_files(graph_filename, output_files):
 			
 		num_vertices = max_vertex
 		for line in lines:
-			if line[0] != '#' and line[0] != '/':
+			if line[0] >= '0' and line[0] <= '9':
 				break
 			targets = 'ode:','ertices:', 'ode :', 'ertices :'
 			for target in targets:

@@ -126,8 +126,8 @@ class Driver(object):
 			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0], self.masters_workers))
 
 
-		elif message == self.message_output: # for client
-			if self.role == 'client':
+		elif message == self.message_output: # for client and standby
+			if self.role != 'standby': # a hack since self.role not updated in this process
 				filename, _ = receive_all_to_target(conn, self.messageInterval)
 				assert(filename == self.result_file)
 				print 'Task done, result is published to {}'.format(filename)
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--super_step", '-t', type=float, default='3.00')
+	parser.add_argument("--super_step", '-t', type=float, default='1.00')
 
 	args = parser.parse_args()
 	# update VM ip with node id

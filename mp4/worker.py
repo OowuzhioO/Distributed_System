@@ -42,7 +42,7 @@ class Worker(object):
 	def preprocess(self, filename):
 		with open(filename, 'r') as input_file:
 			for line in input_file.readlines():
-				if line[0] == '#' or line[0] == '/':
+				if line[0] < '0' or line[0] > '9':
 					continue
 				u, v = line.split()
 				u, v = int(u), int(v)
