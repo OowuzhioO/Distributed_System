@@ -131,7 +131,6 @@ class Driver(object):
 
 	def start_as_client(self):
 		print 'I am the client!'
-		self.server_task.daemon = False
 		real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
 		self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != self.host_name]
 
@@ -145,6 +144,10 @@ class Driver(object):
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
 				send_all_encrypted(sock, self.source)
+		
+		self.server_task = Process(target=self.background_server, args=(queue,))
+		self.server_task.daemon = False
+		self.server_task.start()
 
 
 	def start_as_master(self):
