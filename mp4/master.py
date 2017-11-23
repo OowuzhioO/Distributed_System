@@ -54,10 +54,9 @@ class Master:
 			if message == Commons.ack_preprocess:
 				self.num_preprocess_done += 1
 
-			elif message == Commons.finish_compute:
+			elif message == Commons.finish_compute:	
 				halt = receive_all_decrypted(conn)
-				if not halt:
-					self.all_done = False
+				self.all_done.append(halt)
 
 			elif message == Commons.ack_result:
 				self.num_process_done += 1
@@ -89,13 +88,20 @@ class Master:
 		self.superstep = 0
 		self.all_done = False
 		while not self.all_done:
-			self.all_done = True	
+			start_time = time()
+			self.all_done = []	
+			self.compute_count = 0
 			self.superstep += 1
 			for worker in self.masters_workers[2:]:
 				self.send_to_worker([Commons.request_compute, self.superstep], worker)
 
-			sleep(self.super_step_interval)
-			print('Superstep {} ended...'.format(self.superstep))
+			while (len(self.all_done) < self.num_workers):
+				sleep(1)
+
+			self.all_done = all(self.all_done)
+			time_elapsed = time()-start_time
+			sleep(max(self.super_step_interval-time_elapsed, time_elapsed/2))
+			print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 
 
 	def collect_results(self):

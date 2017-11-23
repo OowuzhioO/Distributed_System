@@ -84,13 +84,14 @@ class Worker(object):
 				self.queue_message(vertex, value, superstep)
 
 			elif message.startswith(Commons.split_filename):
+				start_time = time.time()
 				print('receive command to load file')
 				self.addr = addr[0]
 				self.filename = message
 				self.max_vertex, self.num_vertices = decoded_data
 				dfsWrapper(self.dfs.getFile, self.filename)
 				self.preprocess(self.filename)
-				print('preprocess done')
+				print('preprocess done after {} seconds'.format(time.time()-start_time))
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
