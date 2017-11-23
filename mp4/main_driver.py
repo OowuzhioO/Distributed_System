@@ -107,6 +107,7 @@ class Driver(object):
 			print
 
 			self.task_id = receive_all_decrypted(conn)
+			self.key_number = receive_all_decrypted(conn)
 
 			real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
 			self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != rmtHost]
@@ -115,7 +116,6 @@ class Driver(object):
 				self.role = 'master'
 				self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
 				self.filename_pair[1] = receive_all_decrypted(conn)
-				self.key_number = receive_all_decrypted(conn)
 				
 
 			elif self.host == self.masters_workers[1]:
@@ -145,10 +145,10 @@ class Driver(object):
 
 			send_all_encrypted(sock, self.message_input)
 			send_all_encrypted(sock, self.task_id)
+			send_all_encrypted(sock, self.key_number)
 			if host == self.masters_workers[0]:
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
-				send_all_encrypted(sock, self.key_number)
 
 
 	def start_as_master(self):
@@ -233,6 +233,8 @@ if __name__ == '__main__':
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hbd.file_sys, 
 						args.messageInterval, args.super_step, args.output_file)
 	hbd.fail_callback = main_driver.onProcessFail
+	
+	sleep(1)
 	main_driver.drive()
 	
 	
