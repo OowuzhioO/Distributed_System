@@ -39,7 +39,7 @@ class Driver(object):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
 		queue = Queue()
 
-		# a monitor receive message, check and response, also multicase failure message
+        # a monitor receive message, check and response, also multicase failure message
 		self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.server_sock.bind((self.host, self.port))
@@ -50,7 +50,6 @@ class Driver(object):
 		self.input_task.start()
 
 		self.server_task = Process(target=self.background_server, args=(queue,))
-		self.server_task.daemon = True
 		self.server_task.start()
 
 		self.task_id, self.source, self.filename_pair, self.role, self.client_ip = queue.get()
@@ -92,41 +91,41 @@ class Driver(object):
 		queue.put((task_id, source, (filename, self.result_file), 'client', self.host))
 
 	def background_server(self, queue):
-		while True:
-			conn, addr = self.server_sock.accept()				
-			rmtHost= socket.gethostbyaddr(addr[0])[0]
+		conn, addr = self.server_sock.accept()				
+		rmtHost= socket.gethostbyaddr(addr[0])[0]
+		
+		message = receive_all_decrypted(conn) # the instruction
+
+		if message==self.message_input:
+			self.input_task.terminate()
+			print
+
+			self.task_id = receive_all_decrypted(conn)
+
+			real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
+			self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != rmtHost]
 			
-			message = receive_all_decrypted(conn) # the instruction
-			if message==self.message_input:
-				self.input_task.terminate()
-				print
-
-				self.task_id = receive_all_decrypted(conn)
-
-				real_members = [host.split('_')[0] for host in sorted(self.membList.keys())]
-				self.masters_workers = [socket.gethostbyname(host) for host in real_members if host != rmtHost]
+			if self.host == self.masters_workers[0]:
+				self.role = 'master'
+				self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
+				self.filename_pair[1] = receive_all_decrypted(conn)
+				self.source = receive_all_decrypted(conn)
 				
-				if self.host == self.masters_workers[0]:
-					self.role = 'master'
-					self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
-					self.filename_pair[1] = receive_all_decrypted(conn)
-					self.source = receive_all_decrypted(conn)
-					
 
-				elif self.host == self.masters_workers[1]:
-					self.role = 'standby'
-					print 'I am the standby master!'
+			elif self.host == self.masters_workers[1]:
+				self.role = 'standby'
+				print 'I am the standby master!'
 
-				else:
-					self.role = 'worker'
+			else:
+				self.role = 'worker'
 
-				queue.put((self.task_id, None, self.filename_pair, self.role, addr[0]))
+			queue.put((self.task_id, None, self.filename_pair, self.role, addr[0]))
 
-			elif message ==self.message_output:
-				filename, _ = receive_all_to_target(conn, self.messageInterval)
-				assert(filename == self.result_file)
-				print 'Task done, result is published to {}'.format(filename)
-				sys.exit()
+
+		elif message ==self.message_output: # for client
+			filename, _ = receive_all_to_target(conn, self.messageInterval)
+			assert(filename == self.result_file)
+			print 'Task done, result is published to {}'.format(filename)
 
 
 	def start_as_client(self):
@@ -144,10 +143,6 @@ class Driver(object):
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
 				send_all_encrypted(sock, self.source)
-		
-		self.server_task = Process(target=self.background_server, args=(queue,))
-		self.server_task.daemon = False
-		self.server_task.start()
 
 
 	def start_as_master(self):
