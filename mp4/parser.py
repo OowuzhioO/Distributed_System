@@ -42,7 +42,7 @@ def split_files(graph_filename, output_files):
 		for line in lines:
 			if line[0] >= '0' and line[0] <= '9':
 				break
-			targets = 'ode:','ertices:', 'ode :', 'ertices :'
+			targets = 'ode:','odes:','ertices:', 'ode :','odes :', 'ertices :'
 			for target in targets:
 				if target in line: 
 						num_vertices = int(line[line.index(target)+len(target):].split()[0])
