@@ -1,16 +1,15 @@
 class Vertex:
-	# is_source: True iff the vertex is the source of path
 	# send_messages_to(neighbor, value): sends value to neighbor
-	# vote_to_halt(): vote to halt 
 	# edge_weight(neighbor):  returns weight of the outgoing edge to the neighbor
-	def __init__(self, vertex, neighbors, is_source, send_messages_to, edge_weight):
+	def __init__(self, vertex, neighbors, send_messages_to, edge_weight, is_source, num_vertices):
 		self.vertex = vertex
 		self.value = None
 		self.neighbors = neighbors
-		self.is_source = is_source
 		self.send_messages_to = send_messages_to
 		self.halt = False
 		self.edge_weight = edge_weight
+		self.is_source = is_source
+		self.num_vertices = num_vertices
 		# ...
 
 	def vote_to_halt(self):
@@ -28,7 +27,7 @@ class PRVertex(Vertex):
 	def compute(self, messages, super_step):
 		self.halt = False
 		if super_step > 0:
-			self.value = 0.15/len(messages)+0.85*sum(messages)
+			self.value = 0.15/self.num_vertices+0.85*sum(messages)
 
 		if super_step < 20:
 			self.send_to_all_neighbors(self.value/len(self.neighbors), super_step)

@@ -3,6 +3,8 @@ from message import send_all_encrypted
 import threading
 import json 
 import sys, time
+import socket
+from collections import OrderedDict,defaultdict
 
 class Worker(object):
 	# host_name: hostname of machine
@@ -12,7 +14,7 @@ class Worker(object):
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, task_id, host_name, port_info, masters_workers, source_vertex, commons):
+	def __init__(self, task_id, host_name, port_info, masters_workers, source_vertex, dfs, commons):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port = port_info
@@ -20,7 +22,7 @@ class Worker(object):
 		self.source = source_vertex
 		self.buffer_size = 40
 
-		self.split_filename, self.ack_preprocess, self.request_compute, 
+		self.split_filename, self.ack_preprocess, self.request_compute, \
 		self.finish_compute, self.request_result, self.ack_result = commons
 		self.dfs = dfs
 		self.vertices = {}
@@ -30,8 +32,8 @@ class Worker(object):
 		self.num_workers = len(masters_workers)-2
 		self.max_vertex = None
 		self.superstep = 0
-		self.vertex_to_messages = {v:[] for v in vertices.keys()}
-		self.vertex_to_messages_next = {v:[] for v in vertices.keys()}
+		self.vertex_to_messages = defaultdict(list)
+		self.vertex_to_messages_next = defaultdict(list)
 		self.num_threads = 12
 
 		# for debugging
@@ -40,18 +42,19 @@ class Worker(object):
 
 
 	def preprocess(self, filename):
-		with open(filename, 'w') as input_file:
+		with open(filename, 'r') as input_file:
 			for line in input_file.readlines():
 				if line[0] == '#' or line[0] == '/':
 					continue
 				u, v = line.split()
 				u, v = int(u), int(v)
+				neighbor_host = self.masters_workers[2+min(v*self.num_workers/self.max_vertex, self.num_workers-1)]
+
 				if u not in self.vertices:
-					neighbor_host = self.masters_workers[2+min(v*self.num_workers/self.max_vertex, self.num_workers-1)]
 					self.vertices[u] = self.targetVertex (u, [v, 1, neighbor_host],
-						u==self.source_vertex, self.vertex_send_messages_to,self.vertex_edge_weight)
+						self.vertex_send_messages_to,self.vertex_edge_weight, v==self.source, self.num_vertices)
 				else:
-					self.vertices[u].neighbors.append(v)
+					self.vertices[u].neighbors.append([v, 1, neighbor_host])
 			
 	def queue_message(self, vertex, value, superstep):
 		if self.superstep != superstep:
@@ -75,7 +78,7 @@ class Worker(object):
 
 		while True:
 			data, addr = self.monitor.recvfrom(self.buffer_size) # extra bytes are discarded
-			decoded_data = json.decode(data)
+			decoded_data = json.loads(data)
 			message = decoded_data.pop(0)
 
 			if message == None:
@@ -83,26 +86,28 @@ class Worker(object):
 				self.queue_message(vertex, value, superstep)
 
 			elif message.startswith(self.split_filename):
+				print('receive command to load file')
+				self.addr = addr[0]
 				self.filename = message
-				self.max_vertex = decoded_data[0]
+				self.max_vertex, self.num_vertices = decoded_data
 				self.dfs.getFile(self.filename)
-				self.preprocess(self.filaname)
+				self.preprocess(self.filename)
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock.connect((addr, self.master_port))
-				send_all_encrypted(self.ack_preprocess)
+				sock.connect((self.addr, self.master_port))
+				send_all_encrypted(sock, self.ack_preprocess)
 
 			elif message == self.request_compute:
 				superstep = decoded_data[0]
-				threading.Thread(self.compute, args=(superstep,)).start()
+				threading.Thread(target=self.compute, args=(superstep,)).start()
 
 			elif message == self.request_result: # final step
 				self.load_to_file(self.filename)
 				self.dfs.putFile(self.filename)
 				
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock.connect((addr, self.master_port))
-				send_all_encrypted(self.ack_result)
+				sock.connect((self.addr, self.master_port))
+				send_all_encrypted(sock, self.ack_result)
 				sys.exit()
 				
 
@@ -124,20 +129,23 @@ class Worker(object):
 		return neighbor[1]
 
 	def parallel_compute(self, superstep, start_ix, end_ix):
-		for v in self.vertices[start_ix:end_ix]:
+		for v in sorted(self.vertices.keys())[start_ix:end_ix]:
+			messages = self.vertex_to_messages[v]
 			if superstep == 1:
-				self.first_len_message[v] = len(self.vertex_to_messages[v])
+				self.first_len_message[v] = len(messages)
 			else:
-				if self.task_id==0 and self.first_len_message[v] != len(self.vertex_to_messages[v]):
-					print 'error occurs: {},{}'.format(self.first_len_message[v], len(self.vertex_to_messages[v]))
+				if self.task_id==0 and self.first_len_message[v] != len(messages):
+					print 'error occurs: {},{}'.format(self.first_len_message[v], len(messages))
 
-			if self.task_id==0 and not v.halt:
-				v.compute(self.vertex_to_messages[v], superstep)
+			vertex = self.vertices[v]
 
-			if self.task_id==1 and (not v.halt or len(self.vertex_to_messages[v])!=0):
-				v.compute(self.vertex_to_messages[v], superstep)
+			if self.task_id==0 and not vertex.halt:
+				vertex.compute(messages, superstep)
 
-			self.halt.append(v.halt)
+			if self.task_id==1 and (not vertex.halt or len(messages)!=0):
+				vertex.compute(messages, superstep)
+
+			self.halt.append(vertex.halt)
 
 
 	def compute(self, superstep):
@@ -145,9 +153,15 @@ class Worker(object):
 		assert(superstep == self.superstep+1)
 
 		self.halt = []
+		threads = []
+
+		for i in self.vertex_to_messages:
+			if v not in self.vertices:
+				vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, v==self.source, self.num_vertices)
+
 		for i in range(self.num_threads):
 			curr_thread = threading.Thread(target=self.parallel_compute,args=(superstep, 
-				i*len(self.vertices)/num_threads, (i+1)*len(self.vertices)/num_threads))
+				i*len(self.vertices)/self.num_threads, (i+1)*len(self.vertices)/self.num_threads))
 			threads.append(curr_thread)
 			curr_thread.start()
 
@@ -156,8 +170,8 @@ class Worker(object):
 
 		self.all_halt = all(self.halt)
 
-		self.vertex_to_messages = vertex_to_messages_next
-		self.vertex_to_messages_next = {v:[] for v in vertices.keys()}
+		self.vertex_to_messages = self.vertex_to_messages_next
+		self.vertex_to_messages_next = defaultdict(list)
 		self.superstep += 1
 
 		time.sleep(0.001)
@@ -165,14 +179,18 @@ class Worker(object):
 			if len(self.vertex_to_messages_next[u]) != 0:
 				for m in self.vertex_to_messages_next[u]:
 					self.vertex_to_messages[u].append(m)
-					print('Threads competition happens~')
+					print 'Threads competition happens~'
 				self.vertex_to_messages_next[u] = []
 
 		print 'last message sent after {} seconds'.format(time.time()-start_time)
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((addr, self.master_port))
+		sock.connect((self.addr, self.master_port))
 
-		send_all_encrypted(self.finish_compute)
-		send_all_encrypted(self.all_halt)
-		print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
+		send_all_encrypted(sock, self.finish_compute)
+		send_all_encrypted(sock, self.all_halt)
+
+		if (self.local_global[1] == 0):
+			print('No vertex processed?')
+		else:
+			print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
 
