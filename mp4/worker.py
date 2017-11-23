@@ -90,6 +90,7 @@ class Worker(object):
 				self.max_vertex, self.num_vertices = decoded_data
 				dfsWrapper(self.dfs.getFile, self.filename)
 				self.preprocess(self.filename)
+				print('preprocess done')
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
@@ -152,6 +153,7 @@ class Worker(object):
 
 
 	def compute(self, superstep):
+		print 'Compute for Superstep {}'.format(superstep)
 		start_time = time.time()
 		assert(superstep == self.superstep+1)
 
@@ -185,7 +187,7 @@ class Worker(object):
 					print 'Threads competition happens~'
 				self.vertex_to_messages_next[u] = []
 
-		print 'last message sent after {} seconds'.format(time.time()-start_time)
+		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.addr, self.master_port))
 
