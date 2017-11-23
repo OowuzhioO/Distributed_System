@@ -118,6 +118,10 @@ class Master:
 		send_all_encrypted(sock, self.client_message)
 		send_all_from_file(sock, self.output_filename, 0.001)
 
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((self.masters_workers[1], self.driver_port))
+		send_all_encrypted(sock, self.client_message) # actually standby_message
+
 		for worker in self.masters_workers[2:]:
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([Commons.end_now], worker)

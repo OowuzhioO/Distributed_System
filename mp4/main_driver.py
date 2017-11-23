@@ -37,7 +37,7 @@ class Driver(object):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
 		queue = Queue()
 
-        # a monitor receive message, check and response, also multicase failure message
+		# a monitor receive message, check and response, also multicase failure message
 		self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.server_sock.bind((self.host, self.port))
@@ -60,6 +60,8 @@ class Driver(object):
 			self.start_as_master()
 		elif (self.role == 'worker'):
 			self.start_as_worker()
+		elif (self.role == 'standby'):
+			self.start_as_standby()
 
 	# assert no one fails during input time
 	def get_input(self, newstdin, queue):
@@ -128,10 +130,11 @@ class Driver(object):
 			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0]))
 
 
-		elif message ==self.message_output: # for client
-			filename, _ = receive_all_to_target(conn, self.messageInterval)
-			assert(filename == self.result_file)
-			print 'Task done, result is published to {}'.format(filename)
+		elif message == self.message_output: # for client
+			if self.role == 'client':
+				filename, _ = receive_all_to_target(conn, self.messageInterval)
+				assert(filename == self.result_file)
+				print 'Task done, result is published to {}'.format(filename)
 
 
 	def start_as_client(self):
@@ -165,6 +168,12 @@ class Driver(object):
 							self.masters_workers, self.key_number, self.dfs)
 		self.worker.start_main_server()
 
+
+	def start_as_standby(self):
+		# wait for either master fail or receiving a finished signal
+		assert not self.server_task.is_alive()
+		self.server_task = Process(target=self.background_server, args=(None,))
+		self.server_task.start() 
 
 
 	def onProcessFail(self, failed_process):

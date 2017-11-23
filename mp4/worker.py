@@ -160,7 +160,7 @@ class Worker(object):
 
 		for v in self.vertex_to_messages:
 			if v not in self.vertices:
-				vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, self.key_number, self.num_vertices)
+				self.vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, self.key_number, self.num_vertices)
 
 		for i in range(self.num_threads):
 			curr_thread = threading.Thread(target=self.parallel_compute,args=(superstep, 
