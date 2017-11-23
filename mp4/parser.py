@@ -62,7 +62,7 @@ def combine_files(output_filename, collected_files):
 			with open(collected_file, 'r') as input_file:
 				lines = input_file.readlines()
 				supersteps.append(int(lines[0]))
-				should_be_sorted.append(int(lines[0].split()[0]))
+				should_be_sorted.append(int(lines[1].split()[0]))
 				should_be_sorted.append(int(lines[-1].split()[0]))
 
 			for line in lines[1:]:

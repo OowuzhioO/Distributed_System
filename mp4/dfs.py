@@ -227,11 +227,19 @@ class distributed_file_system(object):
 			self.broadCastData(self.membList.keys(), (filename, next_replica+left_over_replicas))
 
 
+	def super_safe_replicate(self, failed_process, left_over_replicas, filename):
+		try:
+			self.replicate(failed_process, left_over_replicas, filename)
+		except:
+			time.sleep(1)
+			print('dfs Rereplicate again?')
+			self.super_safe_replicate(failed_process, left_over_replicas, filename)
+
+
 	# Need to be called for replication of metadata on time
 	# should be called after memList is updated
 	def onProcessFail(self, failed_process):
 		# do re-replication
-		print 'dfs detected failure from', failed_process
 		logging.info(stampedMsg('Process {} failed, re-replicate files'.format(failed_process)))
 		copied_global_info = copy.deepcopy(self.global_file_info.items())
 		for file, infos in copied_global_info:
@@ -243,7 +251,7 @@ class distributed_file_system(object):
 				except:
 					pass
 				if len(replicas) > 0 and self.groupID == replicas[0]:
-					self.replicate(failed_process, replicas, file)
+					self.super_safe_replicate(failed_process, replicas, file)
 					time.sleep(0.5)
 
 

@@ -5,6 +5,7 @@ from time import sleep, time
 import json
 from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
 import socket
+from commons import Commons, dfsWrapper
 
 
 def dfsWrapper(dfs_opt, filename):
@@ -16,7 +17,7 @@ def dfsWrapper(dfs_opt, filename):
 
 class Master:
 
-	def __init__(self, memblist, task_id, filename_pair, masters_workers, host_name, port_info, client_info, dfs, interval, commons):
+	def __init__(self, memblist, task_id, filename_pair, masters_workers, host_name, port_info, client_info, dfs, interval):
 		self.memblist = memblist
 		self.task_id = task_id
 		self.input_filename, self.output_filename = filename_pair
@@ -29,10 +30,6 @@ class Master:
 		self.client_ip, self.client_message = client_info
 		self.dfs = dfs
 		self.super_step_interval = interval
-
-		# split_filename not only for preprocess but also for results
-		self.split_filename, self.ack_preprocess, self.request_compute, \
-		self.finish_compute, self.request_result, self.ack_result = commons
 
 		self.num_preprocess_done = 0
 		self.num_process_done = 0
@@ -54,31 +51,34 @@ class Master:
 			rmtHost= socket.gethostbyaddr(addr[0])[0]
 			message = receive_all_decrypted(conn)
 
-			if message == self.ack_preprocess:
+			if message == Commons.ack_preprocess:
 				self.num_preprocess_done += 1
 
-			elif message == self.finish_compute:
+			elif message == Commons.finish_compute:
 				halt = receive_all_decrypted(conn)
 				if not halt:
 					self.all_done = False
 
-			elif message == self.ack_result:
+			elif message == Commons.ack_result:
 				self.num_process_done += 1
 
 
 	def preprocess(self):
-		sleep(2)
+		sleep(1)
 		self.server_task = Thread(target=self.background_server)
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.main_files = [self.split_filename+str(i+1) for i in range(self.num_workers)]
+		self.main_files = [Commons.split_filename+str(i+1) for i in range(self.num_workers)]
 		self.max_vertex, self.num_vertices = split_files(self.input_filename, self.main_files)
-		print(self.num_vertices)
+		print('I have {} workers!'.format(self.num_workers))
+		print('num_vertices: ', self.num_vertices)
+
 
 		for ix in range(len(self.main_files)):
 			# put file
 			dfsWrapper(self.dfs.putFile, self.main_files[ix])
+			sleep(1.5)
 			self.send_to_worker([self.main_files[ix], self.max_vertex, self.num_vertices], self.masters_workers[ix+2])
 
 		while (self.num_preprocess_done < self.num_workers):
@@ -92,7 +92,7 @@ class Master:
 			self.all_done = True	
 			self.superstep += 1
 			for worker in self.masters_workers[2:]:
-				self.send_to_worker([self.request_compute, self.superstep], worker)
+				self.send_to_worker([Commons.request_compute, self.superstep], worker)
 
 			sleep(self.super_step_interval)
 			print('Superstep {} ended...'.format(self.superstep))
@@ -101,13 +101,14 @@ class Master:
 	def collect_results(self):
 		for worker in self.masters_workers[2:]:
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			self.send_to_worker([self.request_result], worker)
+			self.send_to_worker([Commons.request_result], worker)
 
 		while (self.num_process_done < self.num_workers):
-			sleep(3)
+			sleep(1)
 
 		for ix in range(len(self.main_files)):
 			self.main_files[ix] += 'out'
+			sleep(1.5)
 			dfsWrapper(self.dfs.getFile,self.main_files[ix]) 
 
 		combine_files(self.output_filename, self.main_files)
@@ -116,6 +117,10 @@ class Master:
 		sock.connect((self.client_ip, self.driver_port))
 		send_all_encrypted(sock, self.client_message)
 		send_all_from_file(sock, self.output_filename, 0.001)
+
+		for worker in self.masters_workers[2:]:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			self.send_to_worker([Commons.end_now], worker)
 
 		
 	# execute the task in 3 phases

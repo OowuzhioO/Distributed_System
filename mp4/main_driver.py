@@ -30,10 +30,8 @@ class Driver(object):
 		self.role = 'unknown'
 		self.master = None # make sense only if role == 'master'
 		self.filename_pair = [None, None]
-		self.task_id = -1
-		self.source = -1 # source vertex
-		self.commons = ('file_piece_', 'Preprocess Done', 'Please Compute', 
-						'Compute Done', 'Result?', 'Here are the results')
+		self.task_id = -1	 # 0 for PR or 1 for SP
+		self.key_number = -1 # num_iterations for PR or source for SP
 
 	def drive(self):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
@@ -52,11 +50,10 @@ class Driver(object):
 		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.start()
 
-		self.task_id, self.source, self.filename_pair, self.role, self.client_ip = queue.get()
+		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip = queue.get()
 
 		member_ips = [socket.gethostbyname(host.split('_')[0]) for host in sorted(self.membList.keys())]
 		self.masters_workers = [host for host in member_ips if host != self.client_ip]
-		print self.masters_workers
 		if (self.role == 'client'):
 			self.start_as_client()
 		elif (self.role == 'master'):
@@ -70,25 +67,34 @@ class Driver(object):
 		input_ready = False
 		while(not input_ready):
 			try:
-				task_id, filename, source= raw_input('Input task_id(0-PR, 1-SP) filename source: ').strip().split()
+				task_id, filename, key_number = raw_input('Input task_id filename key_number, or enter help: ').strip().split()
 				task_id = int(task_id)
+				key_number = int(key_number)
 			except:
-				print 'Input should be in this format for PR: 0 file any_input'
-				print 'Or in this format for SP: 1 file 105'
+				print 'Input should be in this format for PR:	0 file num_iterations'
+				print 'Or in this format for SP:		1 file source_vertex'
 				continue
 
 			if (task_id > 1) or (task_id < 0):
-				print 'Task id not in range 0 to 1 (0-PR, 1-SP)'
+				print 'task_id not in range 0 to 1 (0-PR, 1-SP)'
 				continue
 
 			elif not os.path.exists(filename):
 				print 'File does not exist'
 				continue
 
+			elif (task_id == 0) and (key_number > 100):
+				print 'Number iterations can not be greater than 100'
+				continue
+
+			elif (key_number <= 0):
+				print 'key_number must be positive.'
+				continue
+
 			else:
 				input_ready = True
 
-		queue.put((task_id, source, (filename, self.result_file), 'client', self.host))
+		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host))
 
 	def background_server(self, queue):
 		conn, addr = self.server_sock.accept()				
@@ -109,7 +115,7 @@ class Driver(object):
 				self.role = 'master'
 				self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
 				self.filename_pair[1] = receive_all_decrypted(conn)
-				self.source = receive_all_decrypted(conn)
+				self.key_number = receive_all_decrypted(conn)
 				
 
 			elif self.host == self.masters_workers[1]:
@@ -119,7 +125,7 @@ class Driver(object):
 			else:
 				self.role = 'worker'
 
-			queue.put((self.task_id, None, self.filename_pair, self.role, addr[0]))
+			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0]))
 
 
 		elif message ==self.message_output: # for client
@@ -142,7 +148,7 @@ class Driver(object):
 			if host == self.masters_workers[0]:
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
-				send_all_encrypted(sock, self.source)
+				send_all_encrypted(sock, self.key_number)
 
 
 	def start_as_master(self):
@@ -150,13 +156,13 @@ class Driver(object):
 		print 'I am the master!'
 		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
 							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
-							self.dfs, self.super_step_interval, self.commons)
+							self.dfs, self.super_step_interval)
 		self.master.execute()
 
 	def start_as_worker(self):
 		print 'I am the worker!'
 		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
-							self.masters_workers, self.source, self.dfs, self.commons)
+							self.masters_workers, self.key_number, self.dfs)
 		self.worker.start_main_server()
 
 
@@ -179,7 +185,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--super_step", '-t', type=float, default='6.00')
+	parser.add_argument("--super_step", '-t', type=float, default='3.00')
 
 	args = parser.parse_args()
 	# update VM ip with node id

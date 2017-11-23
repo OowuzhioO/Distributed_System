@@ -5,13 +5,7 @@ import json
 import sys, time
 import socket
 from collections import OrderedDict,defaultdict
-
-def dfsWrapper(dfs_opt, filename):
-	try:
-		dfs_opt(filename)
-	except:
-		sleep(1)
-		dfsWrapper(dfs_opt, filename)
+from commons import Commons, dfsWrapper
 
 class Worker(object):
 	# host_name: hostname of machine
@@ -21,16 +15,13 @@ class Worker(object):
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, task_id, host_name, port_info, masters_workers, source_vertex, dfs, commons):
+	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port = port_info
 		self.task_id = task_id 
-		self.source = source_vertex
+		self.key_number = key_number
 		self.buffer_size = 40
-
-		self.split_filename, self.ack_preprocess, self.request_compute, \
-		self.finish_compute, self.request_result, self.ack_result = commons
 		self.dfs = dfs
 		self.vertices = {}
 		self.targetVertex = PRVertex if (task_id==0) else SPVertex
@@ -59,7 +50,7 @@ class Worker(object):
 
 				if u not in self.vertices:
 					self.vertices[u] = self.targetVertex (u, [(v, 1, neighbor_host)],
-						self.vertex_send_messages_to,self.vertex_edge_weight, v==self.source, self.num_vertices)
+						self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
 				else:
 					self.vertices[u].neighbors.append((v, 1, neighbor_host))
 			
@@ -92,7 +83,7 @@ class Worker(object):
 				vertex, value, superstep = decoded_data
 				self.queue_message(vertex, value, superstep)
 
-			elif message.startswith(self.split_filename):
+			elif message.startswith(Commons.split_filename):
 				print('receive command to load file')
 				self.addr = addr[0]
 				self.filename = message
@@ -102,19 +93,21 @@ class Worker(object):
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
-				send_all_encrypted(sock, self.ack_preprocess)
+				send_all_encrypted(sock, Commons.ack_preprocess)
 
-			elif message == self.request_compute:
+			elif message == Commons.request_compute:
 				superstep = decoded_data[0]
 				threading.Thread(target=self.compute, args=(superstep,)).start()
 
-			elif message == self.request_result: # final step
+			elif message == Commons.request_result: # final step
 				self.filename += 'out'
 				self.load_to_file(self.filename)
 				dfsWrapper(self.dfs.putFile, self.filename)
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
-				send_all_encrypted(sock, self.ack_result)
+				send_all_encrypted(sock, Commons.ack_result)
+
+			elif message == Commons.end_now:
 				sys.exit()
 				
 
@@ -165,9 +158,9 @@ class Worker(object):
 		self.halt = []
 		threads = []
 
-		for i in self.vertex_to_messages:
+		for v in self.vertex_to_messages:
 			if v not in self.vertices:
-				vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, v==self.source, self.num_vertices)
+				vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, self.key_number, self.num_vertices)
 
 		for i in range(self.num_threads):
 			curr_thread = threading.Thread(target=self.parallel_compute,args=(superstep, 
@@ -196,7 +189,7 @@ class Worker(object):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.addr, self.master_port))
 
-		send_all_encrypted(sock, self.finish_compute)
+		send_all_encrypted(sock, Commons.finish_compute)
 		send_all_encrypted(sock, self.all_halt)
 
 		if (self.local_global[1] == 0):
