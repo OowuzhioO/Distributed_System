@@ -3,7 +3,7 @@ class Vertex:
 	# edge_weight(neighbor):  returns weight of the outgoing edge to the neighbor
 	def __init__(self, vertex, neighbors, send_messages_to, edge_weight, is_source, num_vertices):
 		self.vertex = vertex
-		self.value = None
+		self.value = float('inf')
 		self.neighbors = neighbors
 		self.send_messages_to = send_messages_to
 		self.halt = False
@@ -39,17 +39,17 @@ class SPVertex(Vertex):
 		
 	def compute(self, messages, super_step):
 		self.halt = False
-		if not self.is_source:
-			min_dist = min(messages) if self.value==None \
-						else min(min(messages), self.value)
+		min_dist = 0 if self.is_source else float('inf')
+		for m in messages:
+			min_dist = min(min_dist, m) 
 
-			if (min_dist < self.value):
-				self.value = min_dist
-				for neighbor in neighbors:
-					update_val = self.edge_weight(neighbor)+min_dist
-					self.send_messages_to(neighbor, update_val, super_step)
-			else:
-				self.vote_to_halt()
+		if (min_dist < self.value):
+			self.value = min_dist
+			for neighbor in neighbors:
+				update_val = self.edge_weight(neighbor)+min_dist
+				self.send_messages_to(neighbor, update_val, super_step)
+				
+		self.vote_to_halt() 	
 
 			
 

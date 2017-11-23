@@ -6,6 +6,13 @@ import sys, time
 import socket
 from collections import OrderedDict,defaultdict
 
+def dfsWrapper(dfs_opt, filename):
+	try:
+		dfs_opt(filename)
+	except:
+		sleep(1)
+		dfsWrapper(dfs_opt, filename)
+
 class Worker(object):
 	# host_name: hostname of machine
 	# port_info: (master_port, worker_port)
@@ -38,7 +45,7 @@ class Worker(object):
 
 		# for debugging
 		self.first_len_message = {}
-		self.local_global = (0,0)
+		self.local_global = [0,0]
 
 
 	def preprocess(self, filename):
@@ -51,10 +58,10 @@ class Worker(object):
 				neighbor_host = self.masters_workers[2+min(v*self.num_workers/self.max_vertex, self.num_workers-1)]
 
 				if u not in self.vertices:
-					self.vertices[u] = self.targetVertex (u, [v, 1, neighbor_host],
+					self.vertices[u] = self.targetVertex (u, [(v, 1, neighbor_host)],
 						self.vertex_send_messages_to,self.vertex_edge_weight, v==self.source, self.num_vertices)
 				else:
-					self.vertices[u].neighbors.append([v, 1, neighbor_host])
+					self.vertices[u].neighbors.append((v, 1, neighbor_host))
 			
 	def queue_message(self, vertex, value, superstep):
 		if self.superstep != superstep:
@@ -90,7 +97,7 @@ class Worker(object):
 				self.addr = addr[0]
 				self.filename = message
 				self.max_vertex, self.num_vertices = decoded_data
-				self.dfs.getFile(self.filename)
+				dfsWrapper(self.dfs.getFile, self.filename)
 				self.preprocess(self.filename)
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -102,9 +109,9 @@ class Worker(object):
 				threading.Thread(target=self.compute, args=(superstep,)).start()
 
 			elif message == self.request_result: # final step
+				self.filename += 'out'
 				self.load_to_file(self.filename)
-				self.dfs.putFile(self.filename)
-				
+				dfsWrapper(self.dfs.putFile, self.filename)
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
 				send_all_encrypted(sock, self.ack_result)
@@ -116,10 +123,10 @@ class Worker(object):
 	def vertex_send_messages_to(self, neighbor, value, superstep):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		message = json.dumps([None, neighbor[0], value, superstep])
-		if neighbors[2] != self.host:
+		if neighbor[2] != self.host:
 			sock.sendto(message, (neighbor[2], self.worker_port))
 		else:
-			self.queue_message(neighbors[0], value, superstep)
+			self.queue_message(neighbor[0], value, superstep)
 
 			self.local_global[0] += 1
 		self.local_global[1] += 1
@@ -145,7 +152,10 @@ class Worker(object):
 			if self.task_id==1 and (not vertex.halt or len(messages)!=0):
 				vertex.compute(messages, superstep)
 
-			self.halt.append(vertex.halt)
+			if self.task_id == 0:
+				self.halt.append(vertex.halt)
+			else:
+				self.halt.append(len(messages)==0)
 
 
 	def compute(self, superstep):
