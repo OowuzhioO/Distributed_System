@@ -64,6 +64,11 @@ class Driver(object):
 	# assert no one fails during input time
 	def get_input(self, newstdin, queue):
 		sys.stdin = newstdin
+
+		print 'Files to choose from: '
+		os.system('ls')
+		print 
+
 		input_ready = False
 		while(not input_ready):
 			try:

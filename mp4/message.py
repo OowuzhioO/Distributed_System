@@ -47,10 +47,7 @@ def receive_all_to_target(sock, messageInterval, target = None, append = False):
 
 	sock.settimeout(2) # make sure doesn't hang
 	while (len(received) > 0 and len_left_over > 0):
-		try:
-			received = sock.recv(min(len_left_over, SIZE))
-		except:
-			return str(file_name) 
+		received = sock.recv(min(len_left_over, SIZE))
 		if type(target) == socket._socketobject:
 			target.sendall(received)
 		else: # file 
@@ -61,7 +58,8 @@ def receive_all_to_target(sock, messageInterval, target = None, append = False):
 
 	if type(target) != socket._socketobject:
 		target.close()
-	return str(file_name), file_length
+	assert(len_left_over == 0)
+	return str(file_name), file_length-len_left_over
 
 
 
