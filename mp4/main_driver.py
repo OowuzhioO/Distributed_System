@@ -12,7 +12,7 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file):
+	def __init__(self, host_name, port, worker_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file, buffer_size):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
@@ -25,6 +25,7 @@ class Driver(object):
 		self.messageInterval = messageInterval
 		self.super_step_interval = super_step_interval
 		self.result_file = result_file
+		self.worker_buffer_size = buffer_size
 
 		self.client_ip = None
 		self.role = 'unknown'
@@ -169,7 +170,7 @@ class Driver(object):
 	def start_as_worker(self):
 		print 'I am the worker!'
 		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
-							self.masters_workers, self.key_number, self.dfs)
+							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size)
 		self.worker.start_main_server()
 
 
@@ -198,6 +199,7 @@ if __name__ == '__main__':
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
 	parser.add_argument("--super_step", '-t', type=float, default='1.00')
+	parser.add_argument("--buffer_size",'-b', type=int, default='128')
 
 	args = parser.parse_args()
 	# update VM ip with node id
@@ -243,7 +245,7 @@ if __name__ == '__main__':
 	hbd.joinGrp()
 
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hbd.file_sys, 
-						args.messageInterval, args.super_step, args.output_file)
+						args.messageInterval, args.super_step, args.output_file, args.buffer_size)
 	hbd.fail_callback = main_driver.onProcessFail
 	
 	main_driver.drive()

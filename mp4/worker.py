@@ -15,13 +15,13 @@ class Worker(object):
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs):
+	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port = port_info
 		self.task_id = task_id 
 		self.key_number = key_number
-		self.buffer_size = 40
+		self.buffer_size = buffer_size
 		self.dfs = dfs
 		self.vertices = {}
 		self.targetVertex = PRVertex if (task_id==0) else SPVertex
