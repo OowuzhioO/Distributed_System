@@ -185,18 +185,13 @@ class distributed_file_system(object):
 
 		else:
 			target_processes = random.sample(self.membList.keys(), min(self.w_quorum, len(self.membList)))
-			print('dfs: ' , target_processes)
 			if self.groupID not in target_processes:
 				target_processes = target_processes[1:]+[self.groupID]	
 
-			try:
-				self.broadCastFile(target_processes, filename)
-			except:
-				time.sleep(1)
-				return self.putFile(filename, conflict)
-
+			self.broadCastFile(target_processes, filename) 
 			self.broadCastData(self.membList.keys(), (filename, target_processes))
 		return True
+
 
 
 	def getFile(self, filename):

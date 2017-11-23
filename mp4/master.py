@@ -3,8 +3,16 @@ from parser import split_files, combine_files
 from threading import Thread
 from time import sleep, time
 import json
-from message import receive_all_decrypted, send_all_encrypted
+from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
 import socket
+
+
+def dfsWrapper(dfs_opt, filename):
+	try:
+		dfs_opt(filename)
+	except:
+		sleep(1)
+		dfsWrapper(dfs_opt, filename)
 
 class Master:
 
@@ -70,7 +78,7 @@ class Master:
 
 		for ix in range(len(self.main_files)):
 			# put file
-			self.dfs.putFile(self.main_files[ix])
+			dfsWrapper(self.dfs.putFile, self.main_files[ix])
 			self.send_to_worker([self.main_files[ix], self.max_vertex, self.num_vertices], self.masters_workers[ix+2])
 
 		while (self.num_preprocess_done < self.num_workers):
@@ -96,15 +104,18 @@ class Master:
 			self.send_to_worker([self.request_result], worker)
 
 		while (self.num_process_done < self.num_workers):
-			sleep(1)
+			sleep(3)
 
-		for output in self.main_files:
-			self.dfs.getFile(output)
+		for ix in range(len(self.main_files)):
+			self.main_files[ix] += 'out'
+			dfsWrapper(self.dfs.getFile,self.main_files[ix]) 
 
 		combine_files(self.output_filename, self.main_files)
 
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.client_ip, self.driver_port))
 		send_all_encrypted(sock, self.client_message)
+		send_all_from_file(sock, self.output_filename, 0.001)
 
 		
 	# execute the task in 3 phases
