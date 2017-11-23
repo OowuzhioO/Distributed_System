@@ -131,7 +131,7 @@ class Worker(object):
 	def parallel_compute(self, superstep, start_ix, end_ix):
 		for v in sorted(self.vertices.keys())[start_ix:end_ix]:
 			messages = self.vertex_to_messages[v]
-			if superstep == 1:
+			if v not in self.first_len_message or self.first_len_message[v]==0:
 				self.first_len_message[v] = len(messages)
 			else:
 				if self.task_id==0 and self.first_len_message[v] != len(messages):
