@@ -1,19 +1,11 @@
-import random
-from parser import split_files, combine_files
+import random 
+from parser import parse_file, combine_files
 from threading import Thread
 from time import sleep, time
 import json
 from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
 import socket
 from commons import Commons, dfsWrapper
-
-
-def dfsWrapper(dfs_opt, filename):
-	try:
-		dfs_opt(filename)
-	except:
-		sleep(1)
-		dfsWrapper(dfs_opt, filename)
 
 class Master:
 
@@ -68,17 +60,16 @@ class Master:
 		self.server_task.daemon = True
 		self.server_task.start()
 
-		self.main_files = [Commons.split_filename+str(i+1) for i in range(self.num_workers)]
-		self.max_vertex, self.num_vertices = split_files(self.input_filename, self.main_files)
 		print('I have {} workers!'.format(self.num_workers))
+		self.v_to_m_dict, self.num_vertices = parse_file(self.input_filename, self.num_workers)
 		print('num_vertices: ', self.num_vertices)
+		print(self.v_to_m_dict)
 
+		dfsWrapper(self.dfs.putFile, self.input_filename)
+		sleep(1.5)
 
-		for ix in range(len(self.main_files)):
-			# put file
-			dfsWrapper(self.dfs.putFile, self.main_files[ix])
-			sleep(1.5)
-			self.send_to_worker([self.main_files[ix], self.max_vertex, self.num_vertices], self.masters_workers[ix+2])
+		for ix in range(self.num_workers):
+			self.send_to_worker([Commons.request_preprocess, self.input_filename, self.v_to_m_dict, self.num_vertices], self.masters_workers[ix+2])
 
 		while (self.num_preprocess_done < self.num_workers):
 			sleep(1)
@@ -105,19 +96,21 @@ class Master:
 
 
 	def collect_results(self):
-		for worker in self.masters_workers[2:]:
+		self.result_files = [0]*self.num_workers
+
+		for ix in range(self.num_workers):
+			worker = self.masters_workers[ix+2]
+			self.result_files[ix] = 'file_piece_'+str(ix+2)+'_out'
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			self.send_to_worker([Commons.request_result], worker)
+			self.send_to_worker([Commons.request_result, self.result_files[ix]], worker)
 
 		while (self.num_process_done < self.num_workers):
 			sleep(1)
 
-		for ix in range(len(self.main_files)):
-			self.main_files[ix] += 'out'
-			sleep(1.5)
-			dfsWrapper(self.dfs.getFile,self.main_files[ix]) 
+		for ix in range(self.num_workers):
+			dfsWrapper(self.dfs.getFile,self.result_files[ix]) 
 
-		combine_files(self.output_filename, self.main_files)
+		combine_files(self.output_filename, self.result_files)
 
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.client_ip, self.driver_port))
