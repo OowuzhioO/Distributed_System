@@ -12,11 +12,12 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file, buffer_size):
+	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file, buffer_size):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
 		self.worker_port = worker_port
+		self.vertex_port = vertex_port
 		self.master_port = master_port
 		self.membList = membList
 		self.dfs = dfs
@@ -169,7 +170,7 @@ class Driver(object):
 
 	def start_as_worker(self):
 		print 'I am the worker!'
-		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
+		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port, self.vertex_port), 
 							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size)
 		self.worker.start_main_server()
 
@@ -244,7 +245,7 @@ if __name__ == '__main__':
 
 	hbd.joinGrp()
 
-	main_driver = Driver(socket.gethostname(), ports[2], ports[3],  ports[4], hbd.membList, hbd.file_sys, 
+	main_driver = Driver(socket.gethostname(), ports[2], ports[3], ports[4], ports[5], hbd.membList, hbd.file_sys, 
 						args.messageInterval, args.super_step, args.output_file, args.buffer_size)
 	hbd.fail_callback = main_driver.onProcessFail
 	

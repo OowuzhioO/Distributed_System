@@ -28,8 +28,10 @@ class Master:
 
 
 	def send_to_worker(self, list_of_things, worker):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		sock.sendto(json.dumps(list_of_things), (worker, self.worker_port))
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((worker, self.worker_port))
+		send_all_encrypted(sock, list_of_things[0])
+		send_all_encrypted(sock, json.dumps(list_of_things[1:]))
 		
 
 	def background_server(self):
@@ -68,7 +70,7 @@ class Master:
 		sleep(1.5)
 
 		for ix in range(self.num_workers):
-			self.send_to_worker([Commons.request_preprocess, self.input_filename, self.v_to_m_dict, self.num_vertices], self.masters_workers[ix+2])
+			self.send_to_worker([Commons.request_preprocess,self.input_filename, self.v_to_m_dict, self.num_vertices], self.self.masters_workers[ix+2])
 
 		while (self.num_preprocess_done < self.num_workers):
 			sleep(1)

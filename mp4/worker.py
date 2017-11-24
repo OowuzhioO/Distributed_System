@@ -1,5 +1,5 @@
 from vertex import PRVertex, SPVertex
-from message import send_all_encrypted
+from message import send_all_encrypted, receive_all_decrypted
 import threading
 import json 
 import sys, time
@@ -18,7 +18,7 @@ class Worker(object):
 	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
-		self.master_port, self.worker_port = port_info
+		self.master_port, self.worker_port, self.vertex_port = port_info
 		self.task_id = task_id 
 		self.key_number = key_number
 		self.buffer_size = buffer_size
@@ -76,24 +76,24 @@ class Worker(object):
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
 	def start_main_server(self):
-		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.vertex_task = Thread(target=self.start_vertex_server)
+		self.vertex_task.daemon = True
+		self.vertex_task.start()
+
+		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.monitor.bind((self.host, self.worker_port))
+		self.server_sock.listen(5)
 
 		while True:
-			data, addr = self.monitor.recvfrom(self.buffer_size) # extra bytes are discarded
-			decoded_data = json.loads(data)
-			message = decoded_data.pop(0)
+			conn, addr = self.server_sock.accept()
+			message = receive_all_decrypted(conn)
 
-			if message == None:
-				vertex, value, superstep = decoded_data
-				self.queue_message(vertex, value, superstep)
-
-			elif message == Commons.request_preprocess:
+			if message == Commons.request_preprocess:
 				start_time = time.time()
 				print('receive command to load file')
 				self.addr = addr[0]
-				self.input_filename, self.v_to_m_dict, self.num_vertices = decoded_data
+				self.input_filename, self.v_to_m_dict, self.num_vertices = receive_all_decrypted(conn)
 				dfsWrapper(self.dfs.getFile, self.input_filename)
 				print(self.v_to_m_dict)
 				self.preprocess(self.input_filename)
@@ -104,11 +104,11 @@ class Worker(object):
 				send_all_encrypted(sock, Commons.ack_preprocess)
 
 			elif message == Commons.request_compute:
-				superstep = decoded_data[0]
+				superstep = receive_all_decrypted(conn)[0]
 				threading.Thread(target=self.compute, args=(superstep,)).start()
 
 			elif message == Commons.request_result: # final step
-				self.output_filename = decoded_data[0]
+				self.output_filename = receive_all_decrypted(conn)[0]
 				self.load_to_file(self.output_filename)
 				dfsWrapper(self.dfs.putFile, self.output_filename)
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -118,18 +118,26 @@ class Worker(object):
 			elif message == Commons.end_now:
 				sys.exit()
 				
+	def start_vertex_server(self):
+		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.monitor.bind((self.host, self.vertex_port))
+
+		while True:
+			data, addr = self.monitor.recvfrom(self.buffer_size) # extra bytes are discarded
+			self.queue_message(*json.loads(data))
 
 
 	#neighbor structure (vertex, edge_weight, ip)
 	def vertex_send_messages_to(self, neighbor, value, superstep):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		message = json.dumps([None, neighbor[0], value, superstep])
+		data = [neighbor[0], value, superstep]
 		if neighbor[2] != self.host:
-			sock.sendto(message, (neighbor[2], self.worker_port))
+			sock.sendto(json.dumps(data), (neighbor[2], self.worker_port))
 		else:
-			self.queue_message(neighbor[0], value, superstep)
-
+			self.queue_message(*data)
 			self.local_global[0] += 1
+
 		self.local_global[1] += 1
 
 
