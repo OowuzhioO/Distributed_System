@@ -28,17 +28,18 @@ def parse_file(graph_filename, num_machines):
 # process vertices results into 1
 def combine_files(output_filename, collected_files):
 	supersteps = []
-	should_be_sorted = []
-	with open(output_filename, 'w') as output_file:
-		for collected_file in collected_files:
-			with open(collected_file, 'r') as input_file:
-				lines = input_file.readlines()
-				supersteps.append(int(lines[0]))
-				should_be_sorted.append(int(lines[1].split()[0]))
-				should_be_sorted.append(int(lines[-1].split()[0]))
-
+	unsorted_pairs = []
+	for collected_file in collected_files:
+		with open(collected_file, 'r') as input_file:
+			lines = input_file.readlines()
+			supersteps.append(int(lines[0]))
 			for line in lines[1:]:
-				output_file.write(line)
+				unsorted_pairs.append(line.split())
+		
+	with open(output_filename, 'w') as output_file:
+		for x,y in sorted(unsorted_pairs):
+			output_file.write('{} {}\n'.format(x,y))
 
 	assert(len(set(supersteps)) <= 1)
-	assert(sorted(should_be_sorted)==should_be_sorted)
+
+

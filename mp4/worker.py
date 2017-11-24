@@ -139,8 +139,8 @@ class Worker(object):
 	def parallel_compute(self, superstep, start_ix, end_ix):
 		for v in sorted(self.vertices.keys())[start_ix:end_ix]:
 			messages = self.vertex_to_messages[v]
-			if self.task_id==0 and self.first_len_message[v] != len(messages):
-				print 'error occurs: {},{}'.format(self.first_len_message[v], len(messages))
+			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
+				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
 
 			vertex = self.vertices[v]
 

@@ -63,7 +63,6 @@ class Master:
 		print('I have {} workers!'.format(self.num_workers))
 		self.v_to_m_dict, self.num_vertices = parse_file(self.input_filename, self.num_workers)
 		print('num_vertices: ', self.num_vertices)
-		print(self.v_to_m_dict)
 
 		dfsWrapper(self.dfs.putFile, self.input_filename)
 		sleep(1.5)
@@ -100,7 +99,7 @@ class Master:
 
 		for ix in range(self.num_workers):
 			worker = self.masters_workers[ix+2]
-			self.result_files[ix] = 'file_piece_'+str(ix+2)+'_out'
+			self.result_files[ix] = 'file_piece_'+str(ix)+'_out'
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([Commons.request_result, self.result_files[ix]], worker)
 
