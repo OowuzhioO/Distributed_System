@@ -76,7 +76,7 @@ class Worker(object):
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
 	def start_main_server(self):
-		self.vertex_task = Thread(target=self.start_vertex_server)
+		self.vertex_task = threading.Thread(target=self.start_vertex_server)
 		self.vertex_task.daemon = True
 		self.vertex_task.start()
 
