@@ -35,9 +35,11 @@ class Worker(object):
 		self.num_threads = 12
 
 		# for debugging
-		self.first_len_message = {}
+		self.first_len_message = defaultdict(int)
 		self.local_global = [0,0]
 
+	def gethost(self, vertex):
+		return self.masters_workers[2+self.v_to_m_dict[vertex]]
 
 	def preprocess(self, filename):
 		with open(filename, 'r') as input_file:
@@ -45,15 +47,19 @@ class Worker(object):
 				if line[0] < '0' or line[0] > '9':
 					continue
 				u, v = line.split()
-				u, v = int(u), int(v)
-				neighbor_host = self.masters_workers[2+min(v*self.num_workers/self.max_vertex, self.num_workers-1)]
 
-				if u not in self.vertices:
-					self.vertices[u] = self.targetVertex (u, [(v, 1, neighbor_host)],
-						self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
-				else:
-					self.vertices[u].neighbors.append((v, 1, neighbor_host))
-			
+				if self.gethost(u) == self.host:
+			   		if u not in self.vertices:
+						self.vertices[u] = self.targetVertex (u, [(v, 1, self.gethost(v))],
+							self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
+					else:
+						self.vertices[u].neighbors.append((v, 1, self.gethost(v)))
+
+				if self.gethost(v) == self.host:
+					self.first_len_message[v] += 1
+			print(self.vertices) 
+			print(self.first_len_message)
+				
 	def queue_message(self, vertex, value, superstep):
 		if self.superstep != superstep:
 			assert(self.superstep == superstep-1)
@@ -83,14 +89,14 @@ class Worker(object):
 				vertex, value, superstep = decoded_data
 				self.queue_message(vertex, value, superstep)
 
-			elif message.startswith(Commons.split_filename):
+			elif message == Commons.request_preprocess:
 				start_time = time.time()
 				print('receive command to load file')
 				self.addr = addr[0]
-				self.filename = message
-				self.max_vertex, self.num_vertices = decoded_data
-				dfsWrapper(self.dfs.getFile, self.filename)
-				self.preprocess(self.filename)
+				self.input_filename, self.v_to_m_dict, self.num_vertices = decoded_data
+				dfsWrapper(self.dfs.getFile, self.input_filename)
+				print(self.v_to_m_dict)
+				self.preprocess(self.input_filename)
 				print('preprocess done after {} seconds'.format(time.time()-start_time))
 
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -102,9 +108,9 @@ class Worker(object):
 				threading.Thread(target=self.compute, args=(superstep,)).start()
 
 			elif message == Commons.request_result: # final step
-				self.filename += 'out'
-				self.load_to_file(self.filename)
-				dfsWrapper(self.dfs.putFile, self.filename)
+				self.output_filename = decoded_data[0]
+				self.load_to_file(self.output_filename)
+				dfsWrapper(self.dfs.putFile, self.output_filename)
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((self.addr, self.master_port))
 				send_all_encrypted(sock, Commons.ack_result)
@@ -133,11 +139,8 @@ class Worker(object):
 	def parallel_compute(self, superstep, start_ix, end_ix):
 		for v in sorted(self.vertices.keys())[start_ix:end_ix]:
 			messages = self.vertex_to_messages[v]
-			if v not in self.first_len_message or self.first_len_message[v]==0:
-				self.first_len_message[v] = len(messages)
-			else:
-				if self.task_id==0 and self.first_len_message[v] != len(messages):
-					print 'error occurs: {},{}'.format(self.first_len_message[v], len(messages))
+			if self.task_id==0 and self.first_len_message[v] != len(messages):
+				print 'error occurs: {},{}'.format(self.first_len_message[v], len(messages))
 
 			vertex = self.vertices[v]
 
