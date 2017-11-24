@@ -57,8 +57,6 @@ class Worker(object):
 
 				if self.gethost(v) == self.host:
 					self.first_len_message[v] += 1
-			print(self.vertices) 
-			print(self.first_len_message)
 				
 	def queue_message(self, vertex, value, superstep):
 		if self.superstep != superstep:
