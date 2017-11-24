@@ -83,10 +83,10 @@ class Worker(object):
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.monitor.bind((self.host, self.worker_port))
-		self.server_sock.listen(5)
+		self.monitor.listen(5)
 
 		while True:
-			conn, addr = self.server_sock.accept()
+			conn, addr = self.monitor.accept()
 			message = receive_all_decrypted(conn)
 
 			if message == Commons.request_preprocess:
@@ -119,12 +119,12 @@ class Worker(object):
 				sys.exit()
 				
 	def start_vertex_server(self):
-		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.monitor.bind((self.host, self.vertex_port))
+		self.v_monitor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.v_monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.v_monitor.bind((self.host, self.vertex_port))
 
 		while True:
-			data, addr = self.monitor.recvfrom(self.buffer_size) # extra bytes are discarded
+			data, addr = self.v_monitor.recvfrom(self.buffer_size) # extra bytes are discarded
 			self.queue_message(*json.loads(data))
 
 

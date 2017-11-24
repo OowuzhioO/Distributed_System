@@ -182,10 +182,10 @@ class Driver(object):
 
 
 	def onProcessFail(self, failed_process):
-		failed_process = socket.gethostbyname(failed_process.split('_')[0])
-		if self.master != None and failed_process != self.client_ip:
+		failed_process = failed_process.split('_')[0]
+		failed_ip = socket.gethostbyname(failed_process)
+		if self.master != None and failed_ip != self.client_ip:
 			print('I care about '+failed_process)
-			failed_ip = socket.gethostbyname(failed_process)
 
 
 
