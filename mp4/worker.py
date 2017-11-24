@@ -95,7 +95,6 @@ class Worker(object):
 				self.addr = addr[0]
 				self.input_filename, self.v_to_m_dict, self.num_vertices = receive_all_decrypted(conn)
 				dfsWrapper(self.dfs.getFile, self.input_filename)
-				print(self.v_to_m_dict)
 				self.preprocess(self.input_filename)
 				print('preprocess done after {} seconds'.format(time.time()-start_time))
 
@@ -133,7 +132,7 @@ class Worker(object):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		data = [neighbor[0], value, superstep]
 		if neighbor[2] != self.host:
-			sock.sendto(json.dumps(data), (neighbor[2], self.worker_port))
+			sock.sendto(json.dumps(data), (neighbor[2], self.vertex_port))
 		else:
 			self.queue_message(*data)
 			self.local_global[0] += 1
