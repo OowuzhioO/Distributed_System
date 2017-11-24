@@ -31,7 +31,7 @@ class Master:
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((worker, self.worker_port))
 		send_all_encrypted(sock, list_of_things[0])
-		send_all_encrypted(sock, dumps(list_of_things[1:]))
+		send_all_encrypted(sock, list_of_things[1:])
 		
 
 	def background_server(self):
