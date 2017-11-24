@@ -3,55 +3,27 @@ import sys
 def get_vertex(line):
 	return int(line.split()[0])
 
-def binary_search(lines, target):
-	low, high = 0, len(lines)-1	
-	while (low < high):
-		mid = (low+high)/2
-		result = get_vertex(lines[mid])
-		if (result == target):
-			break
-		elif (result < target): 
-			low = mid+1
-		else:
-		 	high = mid-1
-
-	while low < len(lines) and get_vertex(lines[low]) <= target: 
-		low = low+1
-	while low >= len(lines) or (low > 0 and get_vertex(lines[low]) > target):
-		low = low-1
-	return low
-
-# split files based on uniform partition on vertices
-def split_files(graph_filename, output_files):
+def parse_file(graph_filename, num_machines):
 	with open(graph_filename, 'r') as graph_file:
 		lines = graph_file.readlines()
+		v_to_m_dict = {}
+		curr_counter = 0
 
-		num_pieces = len(output_files)
-		max_vertex = get_vertex(lines[-1])
-		files = [open(f,'w') for f in output_files]
-
-		end_ix = -1
-		for file_ix in range(num_pieces): 
-			start_ix = end_ix+1
-			target = (file_ix+1)*max_vertex/num_pieces
-			end_ix = binary_search(lines, target)
-			for line in lines[start_ix:end_ix+1]:
-				files[file_ix].write(line)
-			
-		num_vertices = max_vertex
 		for line in lines:
-			if line[0] >= '0' and line[0] <= '9':
-				break
-			targets = 'ode:','odes:','ertices:', 'ode :','odes :', 'ertices :'
-			for target in targets:
-				if target in line: 
-						num_vertices = int(line[line.index(target)+len(target):].split()[0])
-						break
+			if line[0] < '0' or line[0] > '9':
+					continue
+			u, v = line.split()
+			if u not in v_to_m_dict:
+				v_to_m_dict[u] = curr_counter
+				curr_counter += 1
+			if v not in v_to_m_dict:
+				v_to_m_dict[v] = curr_counter
+				curr_counter += 1
 
-		for f in files:
-			f.close()
+		num_vertices = curr_counter
+		v_to_m_dict = {v: num_machines*i/num_vertices for v,i in v_to_m_dict.items()}
 	
-	return max_vertex, num_vertices
+	return v_to_m_dict, num_vertices
 	
 # process vertices results into 1
 def combine_files(output_filename, collected_files):
