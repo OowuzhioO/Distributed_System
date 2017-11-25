@@ -34,7 +34,8 @@ def combine_files(output_filename, collected_files):
 			lines = input_file.readlines()
 			supersteps.append(int(lines[0]))
 			for line in lines[1:]:
-				unsorted_pairs.append(line.split())
+				x, y = line.split()
+				unsorted_pairs.append((int(x), float(y)))
 		
 	with open(output_filename, 'w') as output_file:
 		for x,y in sorted(unsorted_pairs):
