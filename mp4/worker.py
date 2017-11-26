@@ -49,6 +49,11 @@ class Worker(object):
 	def gethost(self, vertex):
 		return self.masters_workers[2+self.v_to_m_dict[vertex]]
 
+	def init_vertex(self, u):
+		if u not in self.vertices:
+			self.vertices[u] = self.targetVertex (u, [],
+				self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
+
 	def preprocess(self, filename):
 		with open(filename, 'r') as input_file:
 			for line in input_file.readlines():
@@ -57,13 +62,11 @@ class Worker(object):
 				u, v = line.split()
 
 				if self.gethost(u) == self.host:
-			   		if u not in self.vertices:
-						self.vertices[u] = self.targetVertex (u, [(v, 1, self.gethost(v))],
-							self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
-					else:
-						self.vertices[u].neighbors.append((v, 1, self.gethost(v)))
+			   		self.init_vertex(u)
+					self.vertices[u].neighbors.append((v, 1, self.gethost(v)))
 
 				if self.gethost(v) == self.host:
+					self.init_vertex(v)
 					self.first_len_message[v] += 1
 				
 	def queue_message(self, vertex, value, superstep):
@@ -201,9 +204,9 @@ class Worker(object):
 		self.receive_buffer_count = defaultdict(int)
 		self.buffer_count_received = defaultdict(int)
 
-
-		self.vertex_to_messages = self.vertex_to_messages_next
-		self.vertex_to_messages.update(self.vertex_to_messages_remote_next)
+		self.vertex_to_messages = defaultdict(list)
+		for v in self.vertices:
+			self.vertex_to_messages[v] = self.vertex_to_messages_next[v]+self.vertex_to_messages_remote_next[v]
 
 		self.vertex_to_messages_next = defaultdict(list)
 		self.vertex_to_messages_remote_next = defaultdict(list)
