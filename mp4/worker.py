@@ -34,7 +34,7 @@ class Worker(object):
 		self.vertex_to_messages_remote_next = defaultdict(list)
 
 		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
-		self.max_buffer_size = 666
+		self.max_buffer_size = 6666666666
 		self.num_threads = 1 # should use process pool to not share memory ......
 
 		# for debugging
@@ -169,10 +169,10 @@ class Worker(object):
 			vertex = self.vertices[v]
 
 			if self.task_id==0 and not vertex.halt:
-				vertex.compute(messages, superstep)
+				self.vertices[v].compute(messages, superstep)
 
 			if self.task_id==1 and (not vertex.halt or len(messages)!=0):
-				vertex.compute(messages, superstep)
+				self.vertices[v].compute(messages, superstep)
 
 		for host in self.remote_message_buffer:
 			self.send_and_clear_buffer(host)
