@@ -28,15 +28,22 @@ class Worker(object):
 
 		self.masters_workers = masters_workers
 		self.num_workers = len(masters_workers)-2
-		self.max_vertex = None
 		self.superstep = 0
 		self.vertex_to_messages = defaultdict(list)
 		self.vertex_to_messages_next = defaultdict(list)
-		self.num_threads = 12
+
+		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
+		self.max_buffer_size = 666
+		self.num_threads = 1 # should use process pool to not share memory ......
 
 		# for debugging
 		self.first_len_message = defaultdict(int)
 		self.local_global = [0,0]
+
+		# developing ......
+		self.send_buffer_count = defaultdict(int)
+		self.receive_buffer_count = defaultdict(int)
+		self.buffer_count_received = defaultdict(int)
 
 	def gethost(self, vertex):
 		return self.masters_workers[2+self.v_to_m_dict[vertex]]
@@ -64,6 +71,7 @@ class Worker(object):
 			self.vertex_to_messages_next[vertex].append(value)
 		else:
 			self.vertex_to_messages[vertex].append(value)
+			print('Doesn\'t follow current design though')
 		# should use combinator but hard to implement to be thread-safe...
 
 	def load_to_file(self, filename):
@@ -74,10 +82,6 @@ class Worker(object):
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
 	def start_main_server(self):
-		self.vertex_task = threading.Thread(target=self.start_vertex_server)
-		self.vertex_task.daemon = True
-		self.vertex_task.start()
-
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.monitor.bind((self.host, self.worker_port))
@@ -114,23 +118,34 @@ class Worker(object):
 
 			elif message == Commons.end_now:
 				sys.exit()
-				
-	def start_vertex_server(self):
-		self.v_monitor = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		self.v_monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.v_monitor.bind((self.host, self.vertex_port))
 
-		while True:
-			data, addr = self.v_monitor.recvfrom(self.buffer_size) # extra bytes are discarded
-			self.queue_message(*json.loads(data))
+			elif message == None: # for inner vertex communication
+				for params in receive_all_decrypted(conn):
+					self.queue_message(*json.loads(params))
+				self.buffer_count_received[addr[0]] += 1
+
+			elif message == 'buffer_count':
+				self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
 
 
-	#neighbor structure (vertex, edge_weight, ip)
+	def send_and_clear_buffer(self, rmt_host):
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((rmt_host, self.worker_port))
+		sock.send_all_encrypted(None)
+		sock.send_all_encrypted(self.remote_message_buffer[rmt_host])
+		self.remote_message_buffer[rmt_host] = []
+		self.send_buffer_count[rmt_host] += 1
+
+	# neighbor structure (vertex, edge_weight, ip)
 	def vertex_send_messages_to(self, neighbor, value, superstep):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		data = [neighbor[0], value, superstep]
+		data = (neighbor[0], value, superstep)
 		if neighbor[2] != self.host:
-			sock.sendto(json.dumps(data), (neighbor[2], self.vertex_port))
+			rmt_host = neighbor[2]
+			if len(self.remote_message_buffer[rmt_host]) > self.max_buffer_size:
+				self.send_and_clear_buffer(rmt_host)
+			else:
+				self.remote_message_buffer[rmt_host].append(data)
 		else:
 			self.queue_message(*data)
 			self.local_global[0] += 1
@@ -141,8 +156,8 @@ class Worker(object):
 	def vertex_edge_weight(self, neighbor):
 		return neighbor[1]
 
-	def parallel_compute(self, superstep, start_ix, end_ix):
-		for v in sorted(self.vertices.keys())[start_ix:end_ix]:
+	def compute_each_vertex(self, superstep):
+		for v in self.vertices:
 			messages = self.vertex_to_messages[v]
 			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
 				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
@@ -155,10 +170,8 @@ class Worker(object):
 			if self.task_id==1 and (not vertex.halt or len(messages)!=0):
 				vertex.compute(messages, superstep)
 
-			if self.task_id == 0:
-				self.halt.append(vertex.halt)
-			else:
-				self.halt.append(len(messages)==0)
+		for host in self.remote_message_buffer:
+			self.send_and_clear_buffer(host)
 
 
 	def compute(self, superstep):
@@ -166,36 +179,32 @@ class Worker(object):
 		start_time = time.time()
 		assert(superstep == self.superstep+1)
 
-		self.halt = []
-		threads = []
+		self.compute_each_vertex(superstep)
+		for rmt_host in self.masters_workers[2:]:
+			if rmt_host != self.host:
+				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				sock.connect((rmt_host, self.worker_port))
+				sock.send_all_encrypted('buffer_count')
+				sock.send_all_encrypted(self.send_buffer_count[rmt_host])
 
-		for v in self.vertex_to_messages:
-			if v not in self.vertices:
-				self.vertices[v] = self.targetVertex (v, [], self.vertex_send_messages_to, self.vertex_edge_weight, self.key_number, self.num_vertices)
+		print 'record breakpt {} seconds'.format(time.time()-start_time)
 
-		for i in range(self.num_threads):
-			curr_thread = threading.Thread(target=self.parallel_compute,args=(superstep, 
-				i*len(self.vertices)/self.num_threads, (i+1)*len(self.vertices)/self.num_threads))
-			threads.append(curr_thread)
-			curr_thread.start()
+		for rmt_host in self.masters_workers[2:]:
+			if rmt_host != self.host:
+				while rmt_host not in self.receive_buffer_count:
+					time.sleep(1) 
+				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
+					time.sleep(1)
 
-		for curr_thread in threads:
-			curr_thread.join()
+		print(self.receive_buffer_count)
 
-		self.all_halt = all(self.halt)
 
 		self.vertex_to_messages = self.vertex_to_messages_next
 		self.vertex_to_messages_next = defaultdict(list)
+		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
 		self.superstep += 1
 
-		time.sleep(0.001)
-		for u in self.vertex_to_messages_next.keys():
-			if len(self.vertex_to_messages_next[u]) != 0:
-				for m in self.vertex_to_messages_next[u]:
-					self.vertex_to_messages[u].append(m)
-					print 'Threads competition happens~'
-				self.vertex_to_messages_next[u] = []
-
+		assert(len(self.vertex_to_messages_next) == 0)
 		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.addr, self.master_port))
