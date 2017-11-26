@@ -45,7 +45,7 @@ def receive_all_to_target(sock, messageInterval, target = None, append = False):
 		target = open(file_name, mode)
 	received = 'enter_loop'
 
-	sock.settimeout(2) # make sure doesn't hang
+	sock.settimeout(5) # make sure doesn't hang
 	while (len(received) > 0 and len_left_over > 0):
 		received = sock.recv(min(len_left_over, SIZE))
 		if type(target) == socket._socketobject:
