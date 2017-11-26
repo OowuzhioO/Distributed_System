@@ -31,6 +31,7 @@ class Worker(object):
 		self.superstep = 0
 		self.vertex_to_messages = defaultdict(list)
 		self.vertex_to_messages_next = defaultdict(list)
+		self.vertex_to_messages_remote_next = defaultdict(list)
 
 		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
 		self.max_buffer_size = 666
@@ -66,13 +67,12 @@ class Worker(object):
 					self.first_len_message[v] += 1
 				
 	def queue_message(self, vertex, value, superstep):
-		if self.superstep != superstep:
-			assert(self.superstep == superstep-1)
-			self.vertex_to_messages_next[vertex].append(value)
-		else:
-			self.vertex_to_messages[vertex].append(value)
-			print('Doesn\'t follow current design though')
-		# should use combinator but hard to implement to be thread-safe...
+		assert(self.superstep == superstep-1)
+		self.vertex_to_messages_next[vertex].append(value)
+
+	def queue_remote_message(self, vertex, value, superstep):
+		assert(self.superstep == superstep-1)
+		self.vertex_to_messages_remote_next[vertex].append(value)
 
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:
@@ -121,8 +121,9 @@ class Worker(object):
 
 			elif message == None: # for inner vertex communication
 				for params in receive_all_decrypted(conn):
-					self.queue_message(*params)
+					self.queue_remote_message(*params)
 				self.buffer_count_received[addr[0]] += 1
+
 
 			elif message == 'buffer_count':
 				self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
@@ -201,8 +202,9 @@ class Worker(object):
 		self.buffer_count_received = defaultdict(int)
 
 
-		self.vertex_to_messages = self.vertex_to_messages_next
+		self.vertex_to_messages = self.vertex_to_messages_next+self.vertex_to_messages_remote_next
 		self.vertex_to_messages_next = defaultdict(list)
+		self.vertex_to_messages_remote_next = defaultdict(list)
 		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
 		self.superstep += 1
 
