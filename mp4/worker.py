@@ -202,7 +202,9 @@ class Worker(object):
 		self.buffer_count_received = defaultdict(int)
 
 
-		self.vertex_to_messages = self.vertex_to_messages_next+self.vertex_to_messages_remote_next
+		self.vertex_to_messages = self.vertex_to_messages_next
+		self.vertex_to_messages.update(self.vertex_to_messages_remote_next)
+
 		self.vertex_to_messages_next = defaultdict(list)
 		self.vertex_to_messages_remote_next = defaultdict(list)
 		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
