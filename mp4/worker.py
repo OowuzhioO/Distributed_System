@@ -161,6 +161,7 @@ class Worker(object):
 			messages = self.vertex_to_messages[v]
 			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
 				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
+				sys.exit()
 
 			vertex = self.vertices[v]
 
@@ -196,7 +197,9 @@ class Worker(object):
 				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
 					time.sleep(1)
 
-		print(self.receive_buffer_count)
+		self.send_buffer_count = defaultdict(int)
+		self.receive_buffer_count = defaultdict(int)
+		self.buffer_count_received = defaultdict(int)
 
 
 		self.vertex_to_messages = self.vertex_to_messages_next
