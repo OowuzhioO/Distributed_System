@@ -131,8 +131,8 @@ class Worker(object):
 	def send_and_clear_buffer(self, rmt_host):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((rmt_host, self.worker_port))
-		sock.send_all_encrypted(None)
-		sock.send_all_encrypted(self.remote_message_buffer[rmt_host])
+		send_all_encrypted(sock, None)
+		send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
 		self.remote_message_buffer[rmt_host] = []
 		self.send_buffer_count[rmt_host] += 1
 
@@ -184,8 +184,8 @@ class Worker(object):
 			if rmt_host != self.host:
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				sock.connect((rmt_host, self.worker_port))
-				sock.send_all_encrypted('buffer_count')
-				sock.send_all_encrypted(self.send_buffer_count[rmt_host])
+				send_all_encrypted(sock, 'buffer_count')
+				send_all_encrypted(sock, self.send_buffer_count[rmt_host])
 
 		print 'record breakpt {} seconds'.format(time.time()-start_time)
 
