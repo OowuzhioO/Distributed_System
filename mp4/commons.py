@@ -12,7 +12,9 @@ class Commons:
 
 def dfsWrapper(dfs_opt, filename):
 	try:
-		dfs_opt(filename)
+		result = dfs_opt(filename)
+		if result == False or result == None:
+			raise Exception('error in result')
 	except Exception as e:
 		traceback.print_exc()
 		sleep(1)

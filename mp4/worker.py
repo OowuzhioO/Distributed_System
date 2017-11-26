@@ -138,7 +138,6 @@ class Worker(object):
 
 	# neighbor structure (vertex, edge_weight, ip)
 	def vertex_send_messages_to(self, neighbor, value, superstep):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		data = (neighbor[0], value, superstep)
 		if neighbor[2] != self.host:
 			rmt_host = neighbor[2]
