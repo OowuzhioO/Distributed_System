@@ -121,7 +121,7 @@ class Worker(object):
 
 			elif message == None: # for inner vertex communication
 				for params in receive_all_decrypted(conn):
-					self.queue_message(*json.loads(params))
+					self.queue_message(*params)
 				self.buffer_count_received[addr[0]] += 1
 
 			elif message == 'buffer_count':
