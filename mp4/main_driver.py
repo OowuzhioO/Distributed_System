@@ -200,7 +200,7 @@ if __name__ == '__main__':
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
 	parser.add_argument("--super_step", '-t', type=float, default='1.00')
-	parser.add_argument("--buffer_size",'-b', type=int, default='128')
+	parser.add_argument("--buffer_size",'-b', type=int, default='666')
 
 	args = parser.parse_args()
 	# update VM ip with node id

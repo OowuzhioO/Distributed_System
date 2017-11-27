@@ -21,7 +21,6 @@ class Worker(object):
 		self.master_port, self.worker_port, self.vertex_port = port_info
 		self.task_id = task_id 
 		self.key_number = key_number
-		self.buffer_size = buffer_size
 		self.dfs = dfs
 		self.vertices = {}
 		self.targetVertex = PRVertex if (task_id==0) else SPVertex
@@ -34,16 +33,17 @@ class Worker(object):
 		self.vertex_to_messages_remote_next = defaultdict(list)
 
 		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
-		self.max_buffer_size = 6666666666
+		self.max_buffer_size = buffer_size
 		self.num_threads = 1 # should use process pool to not share memory ......
 
 		# for debugging
 		self.first_len_message = defaultdict(int)
 		self.local_global = [0,0]
 
-		# developing ......
+		# kept these because avoid receiving message before initialization
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
+		self.send_receive_count = [0,0]
 		self.buffer_count_received = defaultdict(int)
 
 	def gethost(self, vertex):
@@ -125,6 +125,7 @@ class Worker(object):
 			elif message == None: # for inner vertex communication
 				for params in receive_all_decrypted(conn):
 					self.queue_remote_message(*params)
+					self.send_receive_count[1] += 1
 				self.buffer_count_received[addr[0]] += 1
 
 
@@ -137,8 +138,11 @@ class Worker(object):
 		sock.connect((rmt_host, self.worker_port))
 		send_all_encrypted(sock, None)
 		send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
+		self.send_receive_count[0] += len(self.remote_message_buffer[rmt_host])
 		self.remote_message_buffer[rmt_host] = []
 		self.send_buffer_count[rmt_host] += 1
+
+
 
 	# neighbor structure (vertex, edge_weight, ip)
 	def vertex_send_messages_to(self, neighbor, value, superstep):
@@ -200,9 +204,17 @@ class Worker(object):
 				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
 					time.sleep(1)
 
+		print('Num buffers received: ')
+		print(self.buffer_count_received)
+		print('Num buffers sent: ')
+		print(self.send_buffer_count)
+		print('send receive count for remote message: ')
+		print(self.send_receive_count)
+
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
 		self.buffer_count_received = defaultdict(int)
+		self.send_receive_count = [0,0]
 
 		self.vertex_to_messages = defaultdict(list)
 		for v in self.vertices:
