@@ -73,13 +73,13 @@ class Worker(object):
 	def queue_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_next[vertex].append(value)
-		if task_id == 1:
+		if self.task_id == 1:
 			self.vertex_to_messages_next[vertex] = [min(self.vertex_to_messages_next[vertex])]
 
 	def queue_remote_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_remote_next[vertex].append(value)
-		if task_id == 1:
+		if self.task_id == 1:
 			self.vertex_to_messages_remote_next[vertex] = [min(self.vertex_to_messages_remote_next[vertex])]
 
 	def load_to_file(self, filename):
