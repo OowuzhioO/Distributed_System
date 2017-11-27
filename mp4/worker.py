@@ -15,7 +15,7 @@ class Worker(object):
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size):
+	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size, is_undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port, self.vertex_port = port_info
@@ -34,7 +34,7 @@ class Worker(object):
 
 		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
 		self.max_buffer_size = buffer_size
-		self.num_threads = 1 # should use process pool to not share memory ......
+		self.is_undirected = is_undirected
 
 		# for debugging
 		self.first_len_message = defaultdict(int)
@@ -66,15 +66,21 @@ class Worker(object):
 
 				if self.gethost(v) == self.host:
 					self.init_vertex(v)
+					if self.is_undirected:
+						self.vertices[v].neighbors.append((u, 1, self.gethost(u)))
 					self.first_len_message[v] += 1
 				
 	def queue_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_next[vertex].append(value)
+		if task_id == 1:
+			self.vertex_to_messages_next[vertex] = [min(self.vertex_to_messages_next[vertex])]
 
 	def queue_remote_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_remote_next[vertex].append(value)
+		if task_id == 1:
+			self.vertex_to_messages_remote_next[vertex] = [min(self.vertex_to_messages_remote_next[vertex])]
 
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:

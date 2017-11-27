@@ -12,7 +12,7 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, result_file, buffer_size):
+	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, result_file, buffer_size, undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
@@ -26,6 +26,7 @@ class Driver(object):
 		self.messageInterval = messageInterval
 		self.result_file = result_file
 		self.worker_buffer_size = buffer_size
+		self.is_undirected = undirected
 
 		self.client_ip = None
 		self.role = 'unknown'
@@ -51,7 +52,7 @@ class Driver(object):
 		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.start()
 
-		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip, self.masters_workers = queue.get()
+		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip, self.masters_workers, self.is_undirected = queue.get()
 
 		if (self.role == 'client'):
 			self.start_as_client()
@@ -100,7 +101,7 @@ class Driver(object):
 			else:
 				input_ready = True
 
-		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host, None))
+		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host, None, self.is_undirected))
 
 	def background_server(self, queue):
 		conn, addr = self.server_sock.accept()				
@@ -115,6 +116,7 @@ class Driver(object):
 			self.task_id = receive_all_decrypted(conn)
 			self.key_number = receive_all_decrypted(conn)
 			self.masters_workers = receive_all_decrypted(conn)
+			self.is_undirected = receive_all_decrypted(conn)
 			
 			if self.host == self.masters_workers[0]:
 				self.role = 'master'
@@ -129,7 +131,7 @@ class Driver(object):
 			else:
 				self.role = 'worker'
 
-			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0], self.masters_workers))
+			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0], self.masters_workers, self.is_undirected))
 
 
 		elif message == self.message_output: # for client and standby
@@ -154,6 +156,7 @@ class Driver(object):
 			send_all_encrypted(sock, self.task_id)
 			send_all_encrypted(sock, self.key_number)
 			send_all_encrypted(sock, self.masters_workers)
+			send_all_encrypted(sock, self.is_undirected)
 			if host == self.masters_workers[0]:
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
@@ -170,7 +173,7 @@ class Driver(object):
 	def start_as_worker(self):
 		print 'I am the worker!'
 		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port, self.vertex_port), 
-							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size)
+							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size, self.is_undirected)
 		self.worker.start_main_server()
 
 
@@ -198,7 +201,8 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--buffer_size",'-b', type=int, default='666')
+	parser.add_argument("--buffer_size",'-b', type=int, default='333')
+	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()
 	# update VM ip with node id
@@ -244,7 +248,7 @@ if __name__ == '__main__':
 	hbd.joinGrp()
 
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3], ports[4], ports[5], hbd.membList, hbd.file_sys, 
-						args.messageInterval, args.output_file, args.buffer_size)
+						args.messageInterval, args.output_file, args.buffer_size, args.undirected)
 	hbd.fail_callback = main_driver.onProcessFail
 	
 	main_driver.drive()
