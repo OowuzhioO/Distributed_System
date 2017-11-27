@@ -12,7 +12,7 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, super_step_interval, result_file, buffer_size):
+	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, result_file, buffer_size):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
@@ -24,7 +24,6 @@ class Driver(object):
 		self.message_input = 'User has already inputted'
 		self.message_output = 'I am done with processing file'
 		self.messageInterval = messageInterval
-		self.super_step_interval = super_step_interval
 		self.result_file = result_file
 		self.worker_buffer_size = buffer_size
 
@@ -165,7 +164,7 @@ class Driver(object):
 		print 'I am the master!'
 		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
 							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
-							self.dfs, self.super_step_interval)
+							self.dfs)
 		self.master.execute()
 
 	def start_as_worker(self):
@@ -199,7 +198,6 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--super_step", '-t', type=float, default='1.00')
 	parser.add_argument("--buffer_size",'-b', type=int, default='666')
 
 	args = parser.parse_args()
@@ -246,7 +244,7 @@ if __name__ == '__main__':
 	hbd.joinGrp()
 
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3], ports[4], ports[5], hbd.membList, hbd.file_sys, 
-						args.messageInterval, args.super_step, args.output_file, args.buffer_size)
+						args.messageInterval, args.output_file, args.buffer_size)
 	hbd.fail_callback = main_driver.onProcessFail
 	
 	main_driver.drive()

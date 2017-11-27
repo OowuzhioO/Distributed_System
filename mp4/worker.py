@@ -43,7 +43,6 @@ class Worker(object):
 		# kept these because avoid receiving message before initialization
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
-		self.send_receive_count = [0,0]
 		self.buffer_count_received = defaultdict(int)
 
 	def gethost(self, vertex):
@@ -125,7 +124,6 @@ class Worker(object):
 			elif message == None: # for inner vertex communication
 				for params in receive_all_decrypted(conn):
 					self.queue_remote_message(*params)
-					self.send_receive_count[1] += 1
 				self.buffer_count_received[addr[0]] += 1
 
 
@@ -138,7 +136,6 @@ class Worker(object):
 		sock.connect((rmt_host, self.worker_port))
 		send_all_encrypted(sock, None)
 		send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
-		self.send_receive_count[0] += len(self.remote_message_buffer[rmt_host])
 		self.remote_message_buffer[rmt_host] = []
 		self.send_buffer_count[rmt_host] += 1
 
@@ -151,8 +148,7 @@ class Worker(object):
 			rmt_host = neighbor[2]
 			if len(self.remote_message_buffer[rmt_host]) > self.max_buffer_size:
 				self.send_and_clear_buffer(rmt_host)
-			else:
-				self.remote_message_buffer[rmt_host].append(data)
+			self.remote_message_buffer[rmt_host].append(data)
 		else:
 			self.queue_message(*data)
 			self.local_global[0] += 1
@@ -183,7 +179,7 @@ class Worker(object):
 
 
 	def compute(self, superstep):
-		print 'Compute for Superstep {}'.format(superstep)
+		print '\nCompute for Superstep {}'.format(superstep)
 		start_time = time.time()
 		assert(superstep == self.superstep+1)
 
@@ -208,13 +204,10 @@ class Worker(object):
 		print(self.buffer_count_received)
 		print('Num buffers sent: ')
 		print(self.send_buffer_count)
-		print('send receive count for remote message: ')
-		print(self.send_receive_count)
 
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
 		self.buffer_count_received = defaultdict(int)
-		self.send_receive_count = [0,0]
 
 		self.vertex_to_messages = defaultdict(list)
 		for v in self.vertices:

@@ -9,7 +9,7 @@ from commons import Commons, dfsWrapper
 
 class Master:
 
-	def __init__(self, memblist, task_id, filename_pair, masters_workers, host_name, port_info, client_info, dfs, interval):
+	def __init__(self, memblist, task_id, filename_pair, masters_workers, host_name, port_info, client_info, dfs):
 		self.memblist = memblist
 		self.task_id = task_id
 		self.input_filename, self.output_filename = filename_pair
@@ -21,7 +21,6 @@ class Master:
 		self.master_port, self.worker_port, self.driver_port = port_info
 		self.client_ip, self.client_message = client_info
 		self.dfs = dfs
-		self.super_step_interval = interval
 
 		self.num_preprocess_done = 0
 		self.num_process_done = 0
@@ -57,7 +56,7 @@ class Master:
 
 
 	def preprocess(self):
-		sleep(1)
+		sleep(0.5)
 		self.server_task = Thread(target=self.background_server)
 		self.server_task.daemon = True
 		self.server_task.start()
@@ -88,11 +87,10 @@ class Master:
 				self.send_to_worker([Commons.request_compute, self.superstep], worker)
 
 			while (len(self.all_done) < self.num_workers):
-				sleep(1)
+				sleep(0.25)
 
 			self.all_done = all(self.all_done)
 			time_elapsed = time()-start_time
-			sleep(max(self.super_step_interval-time_elapsed, time_elapsed/2))
 			print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 
 
