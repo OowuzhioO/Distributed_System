@@ -178,8 +178,8 @@ class heartbeat_detector(object):
 				logging.debug(stampedMsg('Monitor recieve msg from {}').format(rmtHost))
 			
 			except socket.error, e:
-				logging.warning("Caught exception socket.error : %s" %e)
-				logging.warning(stampedMsg('Fail to receive signal from clients {}'.format(rmtHost)))
+				logging.info("Caught exception socket.error : %s" %e)
+				logging.info(stampedMsg('Fail to receive signal from clients {}'.format(rmtHost)))
 				break #TODO: should we break listening if UDP reception has troubles?
 
 			if not data: # possibly never called in UDP					
@@ -310,7 +310,7 @@ class heartbeat_detector(object):
 					self.membList[i]['isFailure'] = True
 				elif (maxTime - self.membList[i]['localtime'] >= 2*self.tFail) and (self.membList[i]['isFailure']):
 					if not self.really_failed(i):
-						logging.info("False detection due to heavy traffic".format(i))
+						logging.warning("False detection for {} due to heavy traffic".format(i))
 						self.membList[i]['localtime'] = maxTime
 					else:
 						logging.info("{} will be deleted from membership list".format(i))
@@ -408,15 +408,15 @@ class heartbeat_detector(object):
 				logging.info(stampedMsg('introducer connected'))
 				break
 			except socket.error, e:
-				logging.warning("Caught exception socket.error : %s" %e)
-				logging.warning(stampedMsg('Can not connect to introducer {}\n'.format(Intro_host)))
+				logging.info("Caught exception socket.error : %s" %e)
+				logging.info(stampedMsg('Can not connect to introducer {}\n'.format(Intro_host)))
 		
 		if active_intro_feedback == '': # found no active intro
 			if self.isIntro: # self is an introducer, startup the group
 				logging.info(stampedMsg('self is the first member in the group, initilize it '))
 				self.startupGrp()		
 			else:
-				logging.warning(stampedMsg('self is not an introducer and no active introducer found, quit function'))
+				logging.info(stampedMsg('self is not an introducer and no active introducer found, quit function'))
 				return -1
 		else: # there is at least one introducer alive, join as a regular node
 			active_intro_feedback = self.decodeMsg(active_intro_feedback)

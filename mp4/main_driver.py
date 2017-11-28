@@ -201,7 +201,8 @@ class Driver(object):
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.connect((failed_ip, self.alive_port))
 			return False
-		except:
+		except socket.error, e:
+			print("Caught exception socket.error : %s" %e)
 			return True
 
 	def onProcessFail(self, failed_process):
