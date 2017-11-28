@@ -235,7 +235,7 @@ class Worker(object):
 		send_all_encrypted(sock, self.all_halt)
 
 		if (self.local_global[1] == 0):
-			print('No vertex processed?')
+			print('No vertex processed')
 		else:
 			print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
 

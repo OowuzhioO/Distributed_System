@@ -10,7 +10,6 @@ from message import receive_all_decrypted, receive_all_to_target
 from master import Master
 from worker import Worker
 from time import sleep
-import traceback
 
 class Driver(object):
 	def __init__(self, host_name, port, worker_port, alive_port, master_port, membList, dfs, messageInterval, result_file, buffer_size, undirected):
@@ -203,7 +202,6 @@ class Driver(object):
 			sock.connect((failed_ip, self.alive_port))
 			return False
 		except:
-			traceback.print_exc()
 			return True
 
 	def onProcessFail(self, failed_process):
