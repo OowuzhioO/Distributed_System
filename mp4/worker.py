@@ -18,7 +18,7 @@ class Worker(object):
 	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size, is_undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
-		self.master_port, self.worker_port, self.vertex_port = port_info
+		self.master_port, self.worker_port = port_info
 		self.task_id = task_id 
 		self.key_number = key_number
 		self.dfs = dfs
@@ -58,11 +58,13 @@ class Worker(object):
 			for line in input_file.readlines():
 				if line[0] < '0' or line[0] > '9':
 					continue
-				u, v = line.split()
+				u, v = line.strip().split()
 
 				if self.gethost(u) == self.host:
 			   		self.init_vertex(u)
 					self.vertices[u].neighbors.append((v, 1, self.gethost(v)))
+					if self.is_undirected:
+						self.first_len_message[u] += 1
 
 				if self.gethost(v) == self.host:
 					self.init_vertex(v)

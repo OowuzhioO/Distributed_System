@@ -12,12 +12,12 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, vertex_port, master_port, membList, dfs, messageInterval, result_file, buffer_size, undirected):
+	def __init__(self, host_name, port, worker_port, alive_port, master_port, membList, dfs, messageInterval, result_file, buffer_size, undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
 		self.worker_port = worker_port
-		self.vertex_port = vertex_port
+		self.alive_port = alive_port
 		self.master_port = master_port
 		self.membList = membList
 		self.dfs = dfs
@@ -51,6 +51,9 @@ class Driver(object):
 
 		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.start()
+
+		self.alive_task = Process(target=self.Im_alive)
+		self.alive_task.start()
 
 		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip, self.masters_workers, self.is_undirected = queue.get()
 
@@ -140,6 +143,14 @@ class Driver(object):
 				assert(filename == self.result_file)
 				print 'Task done, result is published to {}'.format(filename)
 
+	def Im_alive(self):
+		self.alive_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.alive_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.alive_sock.bind((self.host, self.alive_port))
+		self.alive_sock.listen(5)
+		while True:
+			self.alive_sock.accept()
+
 
 	def start_as_client(self):
 		print 'I am the client!'
@@ -172,7 +183,7 @@ class Driver(object):
 
 	def start_as_worker(self):
 		print 'I am the worker!'
-		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port, self.vertex_port), 
+		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
 							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size, self.is_undirected)
 		self.worker.start_main_server()
 
@@ -182,11 +193,20 @@ class Driver(object):
 		self.server_task = Process(target=self.background_server, args=(None,))
 		self.server_task.start() 
 
+	def really_failed(self, failed_process):
+		try:
+			failed_process = failed_process.split('_')[0]
+			failed_ip = socket.gethostbyname(failed_process)
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((failed_ip, self.alive_port))
+			return False
+		except:
+			return True
 
 	def onProcessFail(self, failed_process):
 		failed_process = failed_process.split('_')[0]
 		failed_ip = socket.gethostbyname(failed_process)
-		if self.master != None and failed_ip != self.client_ip:
+		if self.master != None:
 			print('I care about '+failed_process)
 
 
@@ -249,6 +269,7 @@ if __name__ == '__main__':
 
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3], ports[4], ports[5], hbd.membList, hbd.file_sys, 
 						args.messageInterval, args.output_file, args.buffer_size, args.undirected)
+	hbd.really_failed = main_driver.really_failed 
 	hbd.fail_callback = main_driver.onProcessFail
 	
 	main_driver.drive()

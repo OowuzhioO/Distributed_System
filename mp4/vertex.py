@@ -8,7 +8,7 @@ class Vertex:
 		self.send_messages_to = send_messages_to
 		self.halt = False
 		self.edge_weight = edge_weight
-		self.is_source = key_number == self.vertex
+		self.is_source = int(key_number) == int(self.vertex)
 		self.num_iterations = key_number
 		self.num_vertices = num_vertices
 		# ...

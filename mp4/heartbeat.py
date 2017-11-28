@@ -293,8 +293,6 @@ class heartbeat_detector(object):
 				logging.debug('**'+i)
 				logging.debug('**new node: {}'.format(self.encodeMsg(self.membList[i])))
 
-	def fail_callback(self):
-		pass
 		
 	# function to check if any node has failed
 	def check(self):	
@@ -311,10 +309,14 @@ class heartbeat_detector(object):
 					logging.info("{} has been labeled as failed ".format(i))
 					self.membList[i]['isFailure'] = True
 				elif (maxTime - self.membList[i]['localtime'] >= 2*self.tFail) and (self.membList[i]['isFailure']):
-					logging.info("{} will be deleted from membership list".format(i))
-					self.membList.pop(i)
-					self.file_sys.onProcessFail(i)
-					self.fail_callback(i)
+					if not self.really_failed(i):
+						logging.info("False detection due to heavy traffic".format(i))
+						self.membList[i]['localtime'] = maxTime
+					else:
+						logging.info("{} will be deleted from membership list".format(i))
+						self.membList.pop(i)
+						self.file_sys.onProcessFail(i)
+						self.fail_callback(i)
 
 			# if tFail was not exceeded
 			elif self.membList[i]['isFailure']:
