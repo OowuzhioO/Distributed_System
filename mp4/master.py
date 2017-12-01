@@ -4,7 +4,7 @@ from threading import Thread
 import socket, json
 from parser import parse_file, combine_files, collect_vertices_info
 from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
-from commons import Commons, dfsWrapper
+from commons import Commons, dfsWrapper, checkpt_file_name
 
 class Master:
 

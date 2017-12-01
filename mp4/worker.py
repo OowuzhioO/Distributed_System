@@ -177,7 +177,10 @@ class Worker(object):
 
 	def send_and_clear_buffer(self, rmt_host):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((rmt_host, self.worker_port))
+		try:
+			sock.connect((rmt_host, self.worker_port))
+		except:
+			pass
 		send_all_encrypted(sock, None)
 		send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
 		self.remote_message_buffer[rmt_host] = []
