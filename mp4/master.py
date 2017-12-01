@@ -1,9 +1,9 @@
 import random 
-from parser import parse_file, combine_files, collect_vertices_info
 from time import sleep, time
-import json
+from threading import Thread
+import socket, json
+from parser import parse_file, combine_files, collect_vertices_info
 from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
-import socket
 from commons import Commons, dfsWrapper
 
 class Master:
@@ -25,7 +25,6 @@ class Master:
 		self.num_preprocess_done = 0
 		self.num_process_done = 0
 		self.is_standby = is_standby
-		self.message_worker_fail = message_worker_fail
 
 		self.superstep = 0
 		self.all_done = False
@@ -60,8 +59,8 @@ class Master:
 			elif message == Commons.ack_result:
 				self.num_process_done += 1
 
-			elif message == self.message_worker_fail:
-				self.failures.append(receive_all_decrypted())
+			elif message == self.fail_message:
+				self.failures.append(receive_all_decrypted(conn))
 
 	def initialize(self):
 		if self.is_standby:

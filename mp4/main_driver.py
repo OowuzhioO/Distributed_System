@@ -176,7 +176,8 @@ class Driver(object):
 
 	def init_master(self, standby):
 		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
-							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
+							self.host_name, (self.master_port, self.worker_port, self.port),
+							(self.client_ip, self.message_output, self.message_fail), 
 							self.dfs, standby)
 
 	def start_as_master(self):
@@ -211,16 +212,13 @@ class Driver(object):
 		failed_process = failed_process.split('_')[0]
 		failed_ip = socket.gethostbyname(failed_process)
 		
-		if self.role == 'master' and failed_ip == self.client_ip:
-			print('Client has already exited!!!!!')
-			self.master.remote_end_tasks()
 
 		if self.role == 'master' and failed_ip in self.masters_workers[2:]:
 			print('One of the workers {} has dead...'.format(failed_process))
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			sock.connect((host, self.master_port))
-			sock.send_all_encrypted(self.message_fail)
-			sock.send_all_encrypted(failed_ip)
+			sock.connect((self.host, self.master_port))
+			send_all_encrypted(sock, self.message_fail)
+			send_all_encrypted(sock, failed_ip)
 			
 
 		elif self.role == 'standby' and failed_ip == self.masters_workers[0]:
