@@ -74,13 +74,20 @@ class Worker(object):
 					self.first_len_message[v] += 1
 			self.sorted_vertices = sorted(self.vertices.keys())
 
-		with open(checkpt_file_name(self.machine_ix, 0), 'w') as checkpt_f:
+
+		file_name = checkpt_file_name(self.machine_ix, 0)
+
+		with open(file_name, 'w') as checkpt_f:
 			for v in self.sorted_vertices:
 				adj_str = str(v)+' '
 				for n in self.vertices[v].neighbors:
 					adj_str += str(n)+' '
 				checkpt_f.write(adj_str+'\n')
+
+		dfsWrapper(self.dfs.putFile, file_name)
+		print('File '+file_name+' successfully save')
 				
+
 	def queue_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_next[vertex].append(value)
@@ -156,6 +163,7 @@ class Worker(object):
 				elif message == Commons.request_compute:
 					superstep,checkpt = receive_all_decrypted(conn)
 					self.curr_thread = threading.Thread(target=self.compute, args=(superstep,checkpt))
+					self.curr_thread.daemon = True
 					self.curr_thread.start()
 
 				elif message == Commons.request_result: # final step
@@ -262,11 +270,6 @@ class Worker(object):
 				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
 					time.sleep(1)
 
-		print('Num buffers received: ')
-		print(self.buffer_count_received)
-		print('Num buffers sent: ')
-		print(self.send_buffer_count)
-
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
 		self.buffer_count_received = defaultdict(int)
@@ -284,6 +287,7 @@ class Worker(object):
 			file_name = checkpt_file_name(self.machine_ix, superstep)
 			self.load_to_file(file_name)
 			dfsWrapper(self.dfs.putFile, file_name)
+			print('File '+file_name+' successfully save')
 
 		assert(len(self.vertex_to_messages_next) == 0)
 		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
