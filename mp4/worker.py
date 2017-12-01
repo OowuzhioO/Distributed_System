@@ -96,7 +96,7 @@ class Worker(object):
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:
 			f.write(str(self.superstep)+'\n')
-			for key in sorted_vertices:
+			for key in self.sorted_vertices:
 				v = self.vertices[key]
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
@@ -126,12 +126,12 @@ class Worker(object):
 				send_all_encrypted(sock, Commons.ack_preprocess)
 
 			elif message == Commons.request_compute:
-				superstep,checkpt = receive_all_decrypted(conn)[0]
+				superstep,checkpt = receive_all_decrypted(conn)
 				self.curr_thread = threading.Thread(target=self.compute, args=(superstep,checkpt))
 				self.curr_thread.start()
 
 			elif message == Commons.request_result: # final step
-				self.output_filename = receive_all_decrypted(conn)[0]
+				self.output_filename, = receive_all_decrypted(conn)
 				self.load_to_file(self.output_filename)
 				dfsWrapper(self.dfs.putFile, self.output_filename)
 				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -267,8 +267,8 @@ class Worker(object):
 
 		if checkpt:
 			file_name = checkpt_file_name(self.machine_ix, superstep)
-			self.load_to_file(filename)
-			dfsWrapper(self.dfs.putFile, filename)
+			self.load_to_file(file_name)
+			dfsWrapper(self.dfs.putFile, file_name)
 
 		assert(len(self.vertex_to_messages_next) == 0)
 		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
