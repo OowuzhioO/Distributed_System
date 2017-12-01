@@ -214,7 +214,7 @@ class Driver(object):
 		
 
 		if self.role == 'master' and failed_ip in self.masters_workers[2:]:
-			print('One of the workers {} has dead...'.format(failed_process))
+			print('One of the workers {} has left...'.format(failed_process))
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.connect((self.host, self.master_port))
 			send_all_encrypted(sock, self.message_fail)

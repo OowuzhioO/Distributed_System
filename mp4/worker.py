@@ -81,7 +81,7 @@ class Worker(object):
 			for v in self.sorted_vertices:
 				adj_str = str(v)+' '
 				for n in self.vertices[v].neighbors:
-					adj_str += str(n)+' '
+					adj_str += str(n[0])+' '
 				checkpt_f.write(adj_str+'\n')
 
 		dfsWrapper(self.dfs.putFile, file_name)

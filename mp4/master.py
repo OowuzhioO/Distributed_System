@@ -121,8 +121,12 @@ class Master:
 			failed_ix = self.masters_workers.index(failed_process)
 			file_edges = checkpt_file_name(failed_ix, 0)
 			file_values = checkpt_file_name(failed_ix, self.superstep)
+
+			print('Fetching file: '+file_edges+' ........')
 			dfsWrapper(self.dfs.getFile, file_edges)
+			print('Fetching file: '+file_values+' ........')
 			dfsWrapper(self.dfs.getFile, file_values)
+
 			collect_vertices_info(file_edges, file_values, vertices_info)
 		self.update_and_report(vertices_info)
 
