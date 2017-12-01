@@ -100,7 +100,44 @@ class Worker(object):
 				v = self.vertices[key]
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
-	
+	def load_and_preprocess(self, conn, addr):
+		start_time = time.time()
+		print('receive command to load file')
+		self.addr = addr[0]
+		self.input_filename, self.v_to_m_dict, self.num_vertices = receive_all_decrypted(conn)
+		dfsWrapper(self.dfs.getFile, self.input_filename)
+		self.preprocess(self.input_filename)
+		print('preprocess done after {} seconds'.format(time.time()-start_time))
+
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((self.addr, self.master_port))
+		send_all_encrypted(sock, Commons.ack_preprocess)
+
+	def return_result_file(self, conn, addr):
+		self.output_filename, = receive_all_decrypted(conn)
+		self.load_to_file(self.output_filename)
+		dfsWrapper(self.dfs.putFile, self.output_filename)
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((self.addr, self.master_port))
+		send_all_encrypted(sock, Commons.ack_result)
+
+	def change_work(self, conn, addr):
+		new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn) 
+
+		for v in self.vertices:
+			for neighbor in self.vertices[v].neighbors:
+				if self.gethost(neighbor) != neighbor[2]:
+					neighbor[2] = self.gethost(neighbor)
+
+		for v in new_vertices_info:
+			neighbors, value = new_vertices_info[v]
+			self.init_vertex(v)
+			for n in neighbors:
+				self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
+			self.vertices[v].value = value
+
+		self.sorted_vertices = sorted(self.vertices.keys())
+
 
 	def start_main_server(self):
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,69 +146,44 @@ class Worker(object):
 		self.monitor.listen(5)
 
 		while True:
-			conn, addr = self.monitor.accept()
-			message = receive_all_decrypted(conn)
+			try:
+				conn, addr = self.monitor.accept()
+				message = receive_all_decrypted(conn)
 
-			if message == Commons.request_preprocess:
-				start_time = time.time()
-				print('receive command to load file')
-				self.addr = addr[0]
-				self.input_filename, self.v_to_m_dict, self.num_vertices = receive_all_decrypted(conn)
-				dfsWrapper(self.dfs.getFile, self.input_filename)
-				self.preprocess(self.input_filename)
-				print('preprocess done after {} seconds'.format(time.time()-start_time))
+				if message == Commons.request_preprocess:
+					self.load_and_preprocess(conn, addr)
 
-				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock.connect((self.addr, self.master_port))
-				send_all_encrypted(sock, Commons.ack_preprocess)
+				elif message == Commons.request_compute:
+					superstep,checkpt = receive_all_decrypted(conn)
+					self.curr_thread = threading.Thread(target=self.compute, args=(superstep,checkpt))
+					self.curr_thread.start()
 
-			elif message == Commons.request_compute:
-				superstep,checkpt = receive_all_decrypted(conn)
-				self.curr_thread = threading.Thread(target=self.compute, args=(superstep,checkpt))
-				self.curr_thread.start()
+				elif message == Commons.request_result: # final step
+					self.return_result_file(conn, addr)
 
-			elif message == Commons.request_result: # final step
-				self.output_filename, = receive_all_decrypted(conn)
-				self.load_to_file(self.output_filename)
-				dfsWrapper(self.dfs.putFile, self.output_filename)
-				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock.connect((self.addr, self.master_port))
-				send_all_encrypted(sock, Commons.ack_result)
+				elif message == Commons.end_now:
+					sys.exit()
 
-			elif message == Commons.end_now:
-				sys.exit()
+				elif message == None: # for inner vertex communication
+					for params in receive_all_decrypted(conn):
+						self.queue_remote_message(*params)
+					self.buffer_count_received[addr[0]] += 1
 
-			elif message == None: # for inner vertex communication
-				for params in receive_all_decrypted(conn):
-					self.queue_remote_message(*params)
-				self.buffer_count_received[addr[0]] += 1
+				elif message == 'buffer_count':
+					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
 
-			elif message == 'buffer_count':
-				self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
+				else: #checkpt call
+					self.curr_thread.join()
 
-			else: #checkpt call
-				self.curr_thread.join()
+					if message == Commons.new_master:
+						self.addr = addr[0]
+						send_all_encrypted(conn, [self.superstep, self.all_halt])
 
-				if message == Commons.new_master:
-					self.addr = addr[0]
-					send_all_encrypted(conn, [self.superstep, self.all_halt])
-
-				elif message == Commons.work_change:
-					new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn) 
-
-					for v in self.vertices:
-						for neighbor in self.vertices[v].neighbors:
-							if self.gethost(neighbor) != neighbor[2]:
-								neighbor[2] = self.gethost(neighbor)
-
-					for v in new_vertices_info:
-						neighbors, value = new_vertices_info[v]
-						self.init_vertex(v)
-						for n in neighbors:
-							self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
-						self.vertices[v].value = value
-
-					self.sorted_vertices = sorted(self.vertices.keys())
+					elif message == Commons.work_change:
+						self.change_work(conn, addr)
+						
+			except:
+				continue
 
 
 
