@@ -5,7 +5,7 @@ import json
 import sys, time
 import socket
 from collections import OrderedDict,defaultdict
-from commons import Commons, dfsWrapper
+from commons import Commons, dfsWrapper, checkpt_file_name
 
 class Worker(object):
 	# host_name: hostname of machine
@@ -27,6 +27,7 @@ class Worker(object):
 
 		self.masters_workers = masters_workers
 		self.num_workers = len(masters_workers)-2
+		self.machine_ix = self.masters_workers.index(self.host)
 		self.superstep = 0
 		self.vertex_to_messages = defaultdict(list)
 		self.vertex_to_messages_next = defaultdict(list)
@@ -62,15 +63,23 @@ class Worker(object):
 
 				if self.gethost(u) == self.host:
 			   		self.init_vertex(u)
-					self.vertices[u].neighbors.append((v, 1, self.gethost(v)))
+					self.vertices[u].neighbors.append([v, 1, self.gethost(v)])
 					if self.is_undirected:
 						self.first_len_message[u] += 1
 
 				if self.gethost(v) == self.host:
 					self.init_vertex(v)
 					if self.is_undirected:
-						self.vertices[v].neighbors.append((u, 1, self.gethost(u)))
+						self.vertices[v].neighbors.append([u, 1, self.gethost(u)])
 					self.first_len_message[v] += 1
+			self.sorted_vertices = sorted(self.vertices.keys())
+
+		with open(checkpt_file_name(self.machine_ix, 0), 'w') as checkpt_f:
+			for v in self.sorted_vertices:
+				adj_str = str(v)+' '
+				for n in self.vertices[v].neighbors:
+					adj_str += str(n)+' '
+				checkpt_f.write(adj_str+'\n')
 				
 	def queue_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
@@ -87,9 +96,11 @@ class Worker(object):
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:
 			f.write(str(self.superstep)+'\n')
-			for key in sorted(self.vertices.keys()):
+			for key in sorted_vertices:
 				v = self.vertices[key]
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
+
+	
 
 	def start_main_server(self):
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -115,8 +126,9 @@ class Worker(object):
 				send_all_encrypted(sock, Commons.ack_preprocess)
 
 			elif message == Commons.request_compute:
-				superstep = receive_all_decrypted(conn)[0]
-				threading.Thread(target=self.compute, args=(superstep,)).start()
+				superstep,checkpt = receive_all_decrypted(conn)[0]
+				self.curr_thread = threading.Thread(target=self.compute, args=(superstep,checkpt))
+				self.curr_thread.start()
 
 			elif message == Commons.request_result: # final step
 				self.output_filename = receive_all_decrypted(conn)[0]
@@ -134,9 +146,33 @@ class Worker(object):
 					self.queue_remote_message(*params)
 				self.buffer_count_received[addr[0]] += 1
 
-
 			elif message == 'buffer_count':
 				self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
+
+			else: #checkpt call
+				self.curr_thread.join()
+
+				if message == Commons.new_master:
+					self.addr = addr[0]
+					send_all_encrypted(conn, [self.superstep, self.all_halt])
+
+				elif message == Commons.work_change:
+					new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn) 
+
+					for v in self.vertices:
+						for neighbor in self.vertices[v].neighbors:
+							if self.gethost(neighbor) != neighbor[2]:
+								neighbor[2] = self.gethost(neighbor)
+
+					for v in new_vertices_info:
+						neighbors, value = new_vertices_info[v]
+						self.init_vertex(v)
+						for n in neighbors:
+							self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
+						self.vertices[v].value = value
+
+					self.sorted_vertices = sorted(self.vertices.keys())
+
 
 
 	def send_and_clear_buffer(self, rmt_host):
@@ -186,18 +222,21 @@ class Worker(object):
 			self.send_and_clear_buffer(host)
 
 
-	def compute(self, superstep):
+	def compute(self, superstep, checkpt):
 		print '\nCompute for Superstep {}'.format(superstep)
 		start_time = time.time()
 		assert(superstep == self.superstep+1)
 
 		self.compute_each_vertex(superstep)
-		for rmt_host in self.masters_workers[2:]:
-			if rmt_host != self.host:
-				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				sock.connect((rmt_host, self.worker_port))
-				send_all_encrypted(sock, 'buffer_count')
-				send_all_encrypted(sock, self.send_buffer_count[rmt_host])
+		try:
+			for rmt_host in self.masters_workers[2:]:
+				if rmt_host != self.host:
+					sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+					sock.connect((rmt_host, self.worker_port))
+					send_all_encrypted(sock, 'buffer_count')
+					send_all_encrypted(sock, self.send_buffer_count[rmt_host])
+		except:
+			pass #forfeit the current compute
 
 		print 'record breakpt {} seconds'.format(time.time()-start_time)
 
@@ -226,16 +265,26 @@ class Worker(object):
 		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
 		self.superstep += 1
 
+		if checkpt:
+			file_name = checkpt_file_name(self.machine_ix, superstep)
+			self.load_to_file(filename)
+			dfsWrapper(self.dfs.putFile, filename)
+
 		assert(len(self.vertex_to_messages_next) == 0)
 		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((self.addr, self.master_port))
-
-		send_all_encrypted(sock, Commons.finish_compute)
-		send_all_encrypted(sock, self.all_halt)
 
 		if (self.local_global[1] == 0):
 			print('No vertex processed')
 		else:
 			print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
+
+		try:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((self.addr, self.master_port))
+			send_all_encrypted(sock, Commons.finish_compute)
+			send_all_encrypted(sock, self.all_halt)
+		except:
+			pass
+
+		
 

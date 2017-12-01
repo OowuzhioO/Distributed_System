@@ -9,6 +9,12 @@ class Commons:
 	request_result = 'Result?'
 	ack_result = 'Here are the results'
 	end_now = 'End now before it\'s too late'
+	new_master = 'I am your new master! Be ware'
+	work_change = 'Work assignment has changed due to failure'
+
+def checkpt_file_name(machine_ix, superstep):
+	return 'checkpt_file_'+str(machine_ix)+'_'+str(superstep)
+
 
 def dfsWrapper(dfs_opt, filename):
 	try:

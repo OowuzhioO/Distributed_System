@@ -23,6 +23,7 @@ class Driver(object):
 		self.dfs = dfs
 		self.message_input = 'User has already inputted'
 		self.message_output = 'I am done with processing file'
+		self.message_fail = 'Some worker failed'
 		self.messageInterval = messageInterval
 		self.result_file = result_file
 		self.worker_buffer_size = buffer_size
@@ -173,13 +174,15 @@ class Driver(object):
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
 
+	def init_master(self, standby):
+		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
+							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
+							self.dfs, standby)
 
 	def start_as_master(self):
 		#self.master = Master
 		print 'I am the master!'
-		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
-							self.host_name, (self.master_port, self.worker_port, self.port),(self.client_ip, self.message_output), 
-							self.dfs)
+		self.init_master(False)
 		self.master.execute()
 
 	def start_as_worker(self):
@@ -207,8 +210,26 @@ class Driver(object):
 	def onProcessFail(self, failed_process):
 		failed_process = failed_process.split('_')[0]
 		failed_ip = socket.gethostbyname(failed_process)
-		if self.master != None:
-			print('I care about '+failed_process)
+		
+		if self.role == 'master' and failed_ip == self.client_ip:
+			print('Client has already exited!!!!!')
+			self.master.remote_end_tasks()
+
+		if self.role == 'master' and failed_ip in self.masters_workers[2:]:
+			print('One of the workers {} has dead...'.format(failed_process))
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((host, self.master_port))
+			sock.send_all_encrypted(self.message_fail)
+			sock.send_all_encrypted(failed_ip)
+			
+
+		elif self.role == 'standby' and failed_ip == self.masters_workers[0]:
+			print('Hehe, now it is my turn')
+			self.role = 'master'
+			self.masters_workers[0:2] = self.masters_workers[1::-1]
+			self.init_master(True)
+			self.master.execute()
+
 
 
 
