@@ -73,6 +73,8 @@ class Driver(object):
 		sys.stdin = newstdin
 
 		print 'Files to choose from: '
+		os.system('rm -f checkpt_file_*')
+		os.system('rm -f file_piece_*')
 		os.system('ls')
 		print 
 

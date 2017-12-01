@@ -190,7 +190,7 @@ class Worker(object):
 					elif message == Commons.work_change:
 						self.change_work(conn, addr)
 						
-			except:
+			except socket.error:
 				continue
 
 

@@ -49,10 +49,10 @@ def collect_vertices_info(file_edges, file_values, vertices_info):
 	with open(file_values, 'r') as values:
 		value_lines = values.readlines()
 
-	assert(len(edge_lines)==len(value_lines))
+	assert(len(edge_lines)==len(value_lines)-1)
 	for i in range(len(edge_lines)):
 		edge_info = edge_lines[i].split()
-		value_info = value_lines[i].split()
+		value_info = value_lines[i+1].split()
 		assert(edge_info[0]==value_info[0])
 		edges = edge_info[1:]
 		value = value_info[1]
