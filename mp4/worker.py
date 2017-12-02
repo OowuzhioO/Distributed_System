@@ -86,7 +86,7 @@ class Worker(object):
 				checkpt_f.write(adj_str+'\n')
 
 		dfsWrapper(self.dfs.putFile, file_name)
-		print('File '+file_name+' successfully save')
+		print('File '+file_name+' successfully saved')
 				
 
 	def queue_message(self, vertex, value, superstep):
@@ -111,9 +111,8 @@ class Worker(object):
 	def load_messages_to_file(self, filename):
 		with open(filename, 'w') as f:
 			f.write(str(self.superstep)+'\n')
-			for key in self.sorted_vertices:
-				v = self.vertices[key]
-				f.write(str(v.vertex)+' '+' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
+			for v in self.sorted_vertices:
+				f.write(str(v)+' '+' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
 
 	def load_and_preprocess(self, conn, addr):
 		start_time = time.time()
@@ -141,7 +140,8 @@ class Worker(object):
 		superstep, self.alive_workers, vertices_info, self.v_to_m_dict = receive_all_decrypted(conn)
 		file_edges = checkpt_file_name(self.machine_ix, 0)
 		file_vals = checkpt_file_name(self.machine_ix, superstep)
-		collect_vertices_info(file_edges, file_vals, vertices_info)
+		file_messages = checkpt_message_file_name(self.machine_ix, superstep)
+		collect_vertices_info(file_edges, file_vals, file_messages, vertices_info)
 		self.vertices = {}
 
 		vertex_to_messages = defaultdict(list)
