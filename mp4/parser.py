@@ -43,17 +43,22 @@ def combine_files(output_filename, collected_files):
 
 	assert(len(set(supersteps)) <= 1)
 
-def collect_vertices_info(file_edges, file_values, vertices_info):
+
+def collect_vertices_info(file_edges, file_values, file_messages, vertices_info):
 	with open(file_edges, 'r') as edges:
 		edge_lines = edges.readlines()
 	with open(file_values, 'r') as values:
 		value_lines = values.readlines()
+	with open(file_messages, 'r') as messages:
+		message_lines = messages.readlines()
 
-	assert(len(edge_lines)==len(value_lines)-1)
+	assert(len(edge_lines) == len(value_lines)-1 == len(message_lines)-1)
 	for i in range(len(edge_lines)):
 		edge_info = edge_lines[i].split()
 		value_info = value_lines[i+1].split()
-		assert(edge_info[0]==value_info[0])
+		message_info = message_lines[i+1].split()
+		assert(edge_info[0] == value_info[0] == message_info)
 		edges = edge_info[1:]
 		value = value_info[1]
-		vertices_info[edge_info[0]] = (edges,value)
+		messages = message_info[1:]
+		vertices_info[edge_info[0]] = (edges,value,messages)

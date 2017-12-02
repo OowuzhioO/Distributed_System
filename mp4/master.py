@@ -4,7 +4,7 @@ from threading import Thread
 import socket, json
 from parser import parse_file, combine_files, collect_vertices_info
 from message import receive_all_decrypted, send_all_encrypted, send_all_from_file
-from commons import Commons, dfsWrapper, checkpt_file_name
+from commons import Commons, dfsWrapper, checkpt_file_name, checkpt_message_file_name
 
 class Master:
 
@@ -14,7 +14,7 @@ class Master:
 		self.input_filename, self.output_filename = filename_pair
 		self.masters_workers = masters_workers
 		self.alive_workers = masters_workers[2:]
-		self.num_workers = len(masters_workers)-2
+		self.num_workers = len(masters_workers)-2 # num alive workers
 
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
@@ -47,7 +47,10 @@ class Master:
 		while True:
 			conn, addr = self.server_sock.accept()				
 			rmtHost= socket.gethostbyaddr(addr[0])[0]
-			message = receive_all_decrypted(conn)
+			try:
+				message = receive_all_decrypted(conn)
+			except (socket.error, ValueError) as e:
+				continue
 
 			if message == Commons.ack_preprocess:
 				self.num_preprocess_done += 1
@@ -72,7 +75,7 @@ class Master:
 		self.all_done = []
 		for worker in self.alive_workers:
 			sock = self.send_to_worker([Commons.new_master], worker)
-			superstep, halt = sock.receive_all_decrypted()
+			superstep, halt = receive_all_decrypted(sock)
 			assert(self.superstep==0 or self.superstep==superstep)
 			self.superstep = superstep
 			self.all_done.append(halt)
@@ -100,15 +103,16 @@ class Master:
 
 	def update_and_report(self, vertices_info):
 		curr_ix = 0
-		self.split_vertices_info = [{} for _ in range(len(self.alive_workers))]
+		self.num_workers = len(self.alive_workers)
+		self.split_vertices_info = [{} for _ in range(self.num_workers)]
 		for v in vertices_info:
-			machine_id = curr_ix*len(self.alive_workers)/len(vertices_info)
-			assert(machine_id < len(self.alive_workers))
+			machine_id = curr_ix*self.num_workers/len(vertices_info)
+			assert(machine_id < self.num_workers)
 			self.v_to_m_dict[v] = self.alive_workers[machine_id]
 			self.split_vertices_info[machine_id][v] = vertices_info[v]
 			curr_ix += 1
 		for i, worker in enumerate(self.alive_workers):
-			self.send_to_worker([Commons.work_change, self.alive_workers, self.split_vertices_info[i], self.v_to_m_dict], worker)
+			self.send_to_worker([Commons.work_change, self.superstep, self.alive_workers, self.split_vertices_info[i], self.v_to_m_dict], worker)
 
 	def process_failure(self):
 		sleep(2)
@@ -124,14 +128,22 @@ class Master:
 			failed_ix = self.masters_workers.index(failed_process)
 			file_edges = checkpt_file_name(failed_ix, 0)
 			file_values = checkpt_file_name(failed_ix, self.superstep)
+			file_messages = checkpt_message_file_name(failed_ix, self.superstep)
 
-			print('Fetching file: '+file_edges+' ........')
+			print('Fetching file: ' + file_edges + ' ........')
 			dfsWrapper(self.dfs.getFile, file_edges)
-			print('Fetching file: '+file_values+' ........')
+			print('Fetching file: ' + file_values + ' ........')
 			dfsWrapper(self.dfs.getFile, file_values)
+			print('Fetching file: ' + file_messages + ' ........')
+			dfsWrapper(self.dfs.getFile, file_messages)
+			print('All files fetched')
 
-			collect_vertices_info(file_edges, file_values, vertices_info)
-		self.update_and_report(vertices_info)
+			collect_vertices_info(file_edges, file_values, file_messages, vertices_info)
+
+		if len(vertices_info) != 0:
+			self.update_and_report(vertices_info)
+			self.all_done = False
+			return True
 
 
 	def process(self):
@@ -155,8 +167,10 @@ class Master:
 				time_elapsed = time()-start_time
 				print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 			else:
-				self.process_failure()
-				print('Recovered from worker failure, now at superstep {}'.format(self.superstep))
+				if self.process_failure()==True:
+					print('Recovered from worker failure, now at superstep {}'.format(self.superstep))
+				self.failures = []
+				
 
 
 	def remote_end_tasks(self):
@@ -175,7 +189,7 @@ class Master:
 		self.result_files = [0]*self.num_workers
 
 		for ix in range(self.num_workers):
-			worker = self.masters_workers[ix+2]
+			worker = self.alive_workers[ix]
 			self.result_files[ix] = 'file_piece_'+str(ix)+'_out'
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([Commons.request_result, self.result_files[ix]], worker)

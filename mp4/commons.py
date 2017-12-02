@@ -15,6 +15,8 @@ class Commons:
 def checkpt_file_name(machine_ix, superstep):
 	return 'checkpt_file_'+str(machine_ix)+'_'+str(superstep)
 
+def checkpt_message_file_name(machine_ix, superstep):
+	return checkpt_file_name(machine_ix,superstep)+'_messages'
 
 def dfsWrapper(dfs_opt, filename):
 	try:
