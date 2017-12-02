@@ -2,7 +2,7 @@ from vertex import PRVertex, SPVertex
 from message import send_all_encrypted, receive_all_decrypted
 import threading
 import json 
-import sys, time
+import sys, time 
 import socket
 from collections import OrderedDict,defaultdict
 from commons import Commons, dfsWrapper, checkpt_file_name
@@ -26,6 +26,7 @@ class Worker(object):
 		self.targetVertex = PRVertex if (task_id==0) else SPVertex
 
 		self.masters_workers = masters_workers
+		self.alive_workers = masters_workers[2:]
 		self.num_workers = len(masters_workers)-2
 		self.machine_ix = self.masters_workers.index(self.host)
 		self.superstep = 0
@@ -47,7 +48,7 @@ class Worker(object):
 		self.buffer_count_received = defaultdict(int)
 
 	def gethost(self, vertex):
-		return self.masters_workers[2+self.v_to_m_dict[vertex]]
+		return self.v_to_m_dict[vertex]
 
 	def init_vertex(self, u):
 		if u not in self.vertices:
@@ -72,8 +73,7 @@ class Worker(object):
 					if self.is_undirected:
 						self.vertices[v].neighbors.append([u, 1, self.gethost(u)])
 					self.first_len_message[v] += 1
-			self.sorted_vertices = sorted(self.vertices.keys())
-
+			self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
 
 		file_name = checkpt_file_name(self.machine_ix, 0)
 
@@ -129,24 +129,27 @@ class Worker(object):
 		send_all_encrypted(sock, Commons.ack_result)
 
 	def change_work(self, conn, addr):
-		new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn) 
-
-		for v in self.vertices:
-			for neighbor in self.vertices[v].neighbors:
-				if self.gethost(neighbor) != neighbor[2]:
-					neighbor[2] = self.gethost(neighbor)
+		print('receive request to change work')
+		self.alive_workers, new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn)
 
 		for v in new_vertices_info:
 			neighbors, value = new_vertices_info[v]
+			assert(v not in self.vertices)
 			self.init_vertex(v)
 			for n in neighbors:
 				self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
 			self.vertices[v].value = value
 
-		self.sorted_vertices = sorted(self.vertices.keys())
+		for v in self.vertices:
+			for neighbor in self.vertices[v].neighbors:
+				if neighbor[2] not in self.alive_workers:
+					neighbor[2] = self.gethost(neighbor[0])
+
+		self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
 
 
 	def start_main_server(self):
+		print('I am worker No.{}!'.format(self.machine_ix))
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.monitor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.monitor.bind((self.host, self.worker_port))
@@ -156,6 +159,8 @@ class Worker(object):
 			try:
 				conn, addr = self.monitor.accept()
 				message = receive_all_decrypted(conn)
+				if message != None:
+					print(message)
 
 				if message == Commons.request_preprocess:
 					self.load_and_preprocess(conn, addr)
@@ -180,17 +185,17 @@ class Worker(object):
 				elif message == 'buffer_count':
 					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
 
-				else: #checkpt call
+				if message == Commons.new_master:
+					self.curr_thread.join()
+					self.addr = addr[0]
+					send_all_encrypted(conn, [self.superstep, self.all_halt])
+
+				elif message == Commons.work_change:
+					self.change_work(conn, addr)
 					self.curr_thread.join()
 
-					if message == Commons.new_master:
-						self.addr = addr[0]
-						send_all_encrypted(conn, [self.superstep, self.all_halt])
-
-					elif message == Commons.work_change:
-						self.change_work(conn, addr)
-						
-			except socket.error:
+			except (socket.error, ValueError) as e:
+				print(e)
 				continue
 
 
@@ -199,10 +204,12 @@ class Worker(object):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		try:
 			sock.connect((rmt_host, self.worker_port))
+			send_all_encrypted(sock, None)
+			send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
+		except KeyboardInterrupt:
+			raise		
 		except:
 			pass
-		send_all_encrypted(sock, None)
-		send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
 		self.remote_message_buffer[rmt_host] = []
 		self.send_buffer_count[rmt_host] += 1
 
@@ -248,27 +255,37 @@ class Worker(object):
 	def compute(self, superstep, checkpt):
 		print '\nCompute for Superstep {}'.format(superstep)
 		start_time = time.time()
-		assert(superstep == self.superstep+1)
+		self.superstep = superstep-1
 
 		self.compute_each_vertex(superstep)
 		try:
-			for rmt_host in self.masters_workers[2:]:
+			for rmt_host in self.alive_workers:
 				if rmt_host != self.host:
 					sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 					sock.connect((rmt_host, self.worker_port))
 					send_all_encrypted(sock, 'buffer_count')
 					send_all_encrypted(sock, self.send_buffer_count[rmt_host])
+		except KeyboardInterrupt:
+			raise		
 		except:
 			pass #forfeit the current compute
 
 		print 'record breakpt {} seconds'.format(time.time()-start_time)
 
-		for rmt_host in self.masters_workers[2:]:
+		for rmt_host in self.alive_workers:
 			if rmt_host != self.host:
 				while rmt_host not in self.receive_buffer_count:
 					time.sleep(1) 
+					if rmt_host not in self.alive_workers:
+						return
+				if rmt_host not in self.alive_workers:
+					return
 				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
 					time.sleep(1)
+					if rmt_host not in self.alive_workers:
+						return
+				if rmt_host not in self.alive_workers:
+					return
 
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
@@ -282,6 +299,7 @@ class Worker(object):
 		self.vertex_to_messages_remote_next = defaultdict(list)
 		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
 		self.superstep += 1
+
 
 		if checkpt:
 			file_name = checkpt_file_name(self.machine_ix, superstep)
@@ -302,6 +320,8 @@ class Worker(object):
 			sock.connect((self.addr, self.master_port))
 			send_all_encrypted(sock, Commons.finish_compute)
 			send_all_encrypted(sock, self.all_halt)
+		except KeyboardInterrupt:
+			raise		
 		except:
 			pass
 
