@@ -113,7 +113,7 @@ class Worker(object):
 		with open(filename, 'w') as f:
 			f.write(str(self.superstep)+'\n')
 			for v in self.sorted_vertices:
-				f.write(str(v)+' '+str(self.first_len_message[v])+' '
+				f.write(str(v)+' '+str(self.first_len_message[v])+' '+
 					' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
 
 	def load_and_preprocess(self, conn, addr):
