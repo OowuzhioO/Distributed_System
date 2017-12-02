@@ -60,5 +60,6 @@ def collect_vertices_info(file_edges, file_values, file_messages, vertices_info)
 		assert(edge_info[0] == value_info[0] == message_info[0])
 		edges = edge_info[1:]
 		value = value_info[1]
-		messages = message_info[1:]
-		vertices_info[edge_info[0]] = (edges,value,messages)
+		first_len = message_info[1]
+		messages = message_info[2:]
+		vertices_info[edge_info[0]] = (edges,value,first_len, messages)
