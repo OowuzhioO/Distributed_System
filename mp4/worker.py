@@ -47,6 +47,7 @@ class Worker(object):
 		self.send_buffer_count = defaultdict(int)
 		self.receive_buffer_count = defaultdict(int)
 		self.buffer_count_received = defaultdict(int)
+		self.hasFailure = False
 
 	def gethost(self, vertex):
 		return self.v_to_m_dict[vertex]
@@ -112,7 +113,8 @@ class Worker(object):
 		with open(filename, 'w') as f:
 			f.write(str(self.superstep)+'\n')
 			for v in self.sorted_vertices:
-				f.write(str(v)+' '+' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
+				f.write(str(v)+' '+str(self.first_len_message[v])+' '
+					' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
 
 	def load_and_preprocess(self, conn, addr):
 		start_time = time.time()
@@ -137,25 +139,31 @@ class Worker(object):
 
 	def change_work(self, conn, addr):
 		print('receive request to change work')
-		superstep, self.alive_workers, vertices_info, self.v_to_m_dict = receive_all_decrypted(conn)
+		superstep, self.alive_workers, vertices_info, v_to_m_dict = receive_all_decrypted(conn)
+		self.curr_thread.join()
+		self.reinit_vars()
+		self.superstep, self.v_to_m_dict = superstep, v_to_m_dict
+		self.hasFailure = True
+
 		file_edges = checkpt_file_name(self.machine_ix, 0)
 		file_vals = checkpt_file_name(self.machine_ix, superstep)
 		file_messages = checkpt_message_file_name(self.machine_ix, superstep)
 		collect_vertices_info(file_edges, file_vals, file_messages, vertices_info)
 		self.vertices = {}
 
-		vertex_to_messages = defaultdict(list)
+		self.first_len_message = defaultdict(int)
+		self.vertex_to_messages = defaultdict(list)
 		for v in vertices_info:
-			neighbors, value, messages = vertices_info[v]
+			neighbors, value, first_len, messages = vertices_info[v]
 			assert(v not in self.vertices)
 			self.init_vertex(v)
 			for n in neighbors:
 				self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
 			self.vertices[v].value = value
+			self.first_len_message[v] = int(first_len)
 			self.vertex_to_messages[v] = map(float, messages)
 
 		self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
-		return superstep
 
 
 	def start_main_server(self):
@@ -199,12 +207,8 @@ class Worker(object):
 					send_all_encrypted(conn, [self.superstep, self.all_halt])
 
 				elif message == Commons.work_change:
-					superstep = self.change_work(conn, addr)
-					self.curr_thread.join()
-					self.superstep = superstep
-					self.vertex_to_messages_next = defaultdict(list)
-					self.vertex_to_messages_remote_next = defaultdict(list)
-					self.reinit_vars()
+					self.change_work(conn, addr)
+					
 
 			except (socket.error, ValueError) as e:
 				print(e)
@@ -248,7 +252,7 @@ class Worker(object):
 	def compute_each_vertex(self, superstep):
 		for v in self.vertices:
 			messages = self.vertex_to_messages[v]
-			if self.task_id==0 and self.first_len_message[v] != len(messages) and len(messages)!=0:
+			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
 				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
 				sys.exit()
 
