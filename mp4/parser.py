@@ -3,7 +3,7 @@ import sys
 def get_vertex(line):
 	return int(line.split()[0])
 
-def parse_file(graph_filename, num_machines):
+def parse_file(graph_filename, num_machines, masters_workers):
 	with open(graph_filename, 'r') as graph_file:
 		lines = graph_file.readlines()
 		v_to_m_dict = {}
@@ -21,7 +21,7 @@ def parse_file(graph_filename, num_machines):
 				curr_counter += 1
 
 		num_vertices = curr_counter
-		v_to_m_dict = {v: num_machines*i/num_vertices for v,i in v_to_m_dict.items()}
+		v_to_m_dict = {v: masters_workers[2+num_machines*i/num_vertices] for v,i in v_to_m_dict.items()}
 	
 	return v_to_m_dict, num_vertices
 	

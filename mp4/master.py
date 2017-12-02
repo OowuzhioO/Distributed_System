@@ -86,7 +86,7 @@ class Master:
 		self.server_task.start()
 
 		print('I have {} workers!'.format(self.num_workers))
-		self.v_to_m_dict, self.num_vertices = parse_file(self.input_filename, self.num_workers)
+		self.v_to_m_dict, self.num_vertices = parse_file(self.input_filename, self.num_workers, self.masters_workers)
 		print('num_vertices: ', self.num_vertices)
 
 		dfsWrapper(self.dfs.putFile, self.input_filename)
@@ -103,11 +103,12 @@ class Master:
 		self.split_vertices_info = [{} for _ in range(len(self.alive_workers))]
 		for v in vertices_info:
 			machine_id = curr_ix*len(self.alive_workers)/len(vertices_info)
-			self.v_to_m_dict[v] = machine_id
+			assert(machine_id < len(self.alive_workers))
+			self.v_to_m_dict[v] = self.alive_workers[machine_id]
 			self.split_vertices_info[machine_id][v] = vertices_info[v]
 			curr_ix += 1
 		for i, worker in enumerate(self.alive_workers):
-			self.send_to_worker([Commons.work_change, self.split_vertices_info[i], self.v_to_m_dict], worker)
+			self.send_to_worker([Commons.work_change, self.alive_workers, self.split_vertices_info[i], self.v_to_m_dict], worker)
 
 	def process_failure(self):
 		sleep(2)
@@ -117,6 +118,8 @@ class Master:
 
 		vertices_info = {}
 		for failed_process in self.failures:
+			if failed_process not in self.alive_workers:
+				continue
 			self.alive_workers.remove(failed_process)
 			failed_ix = self.masters_workers.index(failed_process)
 			file_edges = checkpt_file_name(failed_ix, 0)
