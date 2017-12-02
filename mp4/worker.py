@@ -113,7 +113,7 @@ class Worker(object):
 			f.write(str(self.superstep)+'\n')
 			for key in self.sorted_vertices:
 				v = self.vertices[key]
-				f.write(str(v.vertex)+' '+' '.join(str(x) for x in self.vertex_to_messages[v]))
+				f.write(str(v.vertex)+' '+' '.join(str(x) for x in self.vertex_to_messages[v])+'\n')
 
 	def load_and_preprocess(self, conn, addr):
 		start_time = time.time()
@@ -169,8 +169,6 @@ class Worker(object):
 			try:
 				conn, addr = self.monitor.accept()
 				message = receive_all_decrypted(conn)
-				if message != None:
-					print(message)
 
 				if message == Commons.request_preprocess:
 					self.load_and_preprocess(conn, addr)
