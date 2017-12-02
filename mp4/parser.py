@@ -62,4 +62,5 @@ def collect_vertices_info(file_edges, file_values, file_messages, vertices_info)
 		value = value_info[1]
 		first_len = message_info[1]
 		messages = message_info[2:]
-		vertices_info[edge_info[0]] = (edges,value,first_len, messages)
+		assert(edge_info[0] not in vertices_info)	
+		vertices_info[edge_info[0]] = (edges,value,first_len,messages)
