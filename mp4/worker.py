@@ -5,7 +5,8 @@ import json
 import sys, time 
 import socket
 from collections import OrderedDict,defaultdict
-from commons import Commons, dfsWrapper, checkpt_file_name
+from commons import Commons, dfsWrapper, checkpt_file_name, checkpt_message_file_name
+from parser import collect_vertices_info
 
 class Worker(object):
 	# host_name: hostname of machine
@@ -107,6 +108,13 @@ class Worker(object):
 				v = self.vertices[key]
 				f.write(str(v.vertex)+' '+str(v.value)+'\n')
 
+	def load_messages_to_file(self, filename):
+		with open(filename, 'w') as f:
+			f.write(str(self.superstep)+'\n')
+			for key in self.sorted_vertices:
+				v = self.vertices[key]
+				f.write(str(v.vertex)+' '+' '.join(str(x) for x in self.vertex_to_messages[v]))
+
 	def load_and_preprocess(self, conn, addr):
 		start_time = time.time()
 		print('receive command to load file')
@@ -130,22 +138,24 @@ class Worker(object):
 
 	def change_work(self, conn, addr):
 		print('receive request to change work')
-		self.alive_workers, new_vertices_info, self.v_to_m_dict = receive_all_decrypted(conn)
+		superstep, self.alive_workers, vertices_info, self.v_to_m_dict = receive_all_decrypted(conn)
+		file_edges = checkpt_file_name(self.machine_ix, 0)
+		file_vals = checkpt_file_name(self.machine_ix, superstep)
+		collect_vertices_info(file_edges, file_vals, vertices_info)
+		self.vertices = {}
 
-		for v in new_vertices_info:
-			neighbors, value = new_vertices_info[v]
+		vertex_to_messages = defaultdict(list)
+		for v in vertices_info:
+			neighbors, value, messages = vertices_info[v]
 			assert(v not in self.vertices)
 			self.init_vertex(v)
 			for n in neighbors:
 				self.vertices[v].neighbors.append([n, 1, self.gethost(n)])
 			self.vertices[v].value = value
-
-		for v in self.vertices:
-			for neighbor in self.vertices[v].neighbors:
-				if neighbor[2] not in self.alive_workers:
-					neighbor[2] = self.gethost(neighbor[0])
+			self.vertex_to_messages[v] = map(float, messages)
 
 		self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
+		return superstep
 
 
 	def start_main_server(self):
@@ -191,8 +201,12 @@ class Worker(object):
 					send_all_encrypted(conn, [self.superstep, self.all_halt])
 
 				elif message == Commons.work_change:
-					self.change_work(conn, addr)
+					superstep = self.change_work(conn, addr)
 					self.curr_thread.join()
+					self.superstep = superstep
+					self.vertex_to_messages_next = defaultdict(list)
+					self.vertex_to_messages_remote_next = defaultdict(list)
+					self.reinit_vars()
 
 			except (socket.error, ValueError) as e:
 				print(e)
@@ -236,7 +250,7 @@ class Worker(object):
 	def compute_each_vertex(self, superstep):
 		for v in self.vertices:
 			messages = self.vertex_to_messages[v]
-			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
+			if self.task_id==0 and self.first_len_message[v] != len(messages) and len(messages)!=0:
 				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
 				sys.exit()
 
@@ -252,12 +266,21 @@ class Worker(object):
 			self.send_and_clear_buffer(host)
 
 
-	def compute(self, superstep, checkpt):
-		print '\nCompute for Superstep {}'.format(superstep)
-		start_time = time.time()
-		self.superstep = superstep-1
+	def reinit_vars(self):
+		self.send_buffer_count = defaultdict(int)
+		self.receive_buffer_count = defaultdict(int)
+		self.buffer_count_received = defaultdict(int)
 
-		self.compute_each_vertex(superstep)
+		self.vertex_to_messages = defaultdict(list)
+		for v in self.vertices:
+			self.vertex_to_messages[v] = self.vertex_to_messages_next[v]+self.vertex_to_messages_remote_next[v]
+
+		self.vertex_to_messages_next = defaultdict(list)
+		self.vertex_to_messages_remote_next = defaultdict(list)
+		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
+
+
+	def send_checksum_info(self):
 		try:
 			for rmt_host in self.alive_workers:
 				if rmt_host != self.host:
@@ -270,8 +293,7 @@ class Worker(object):
 		except:
 			pass #forfeit the current compute
 
-		print 'record breakpt {} seconds'.format(time.time()-start_time)
-
+	def wait_for_all_messages(self):
 		for rmt_host in self.alive_workers:
 			if rmt_host != self.host:
 				while rmt_host not in self.receive_buffer_count:
@@ -286,35 +308,20 @@ class Worker(object):
 						return
 				if rmt_host not in self.alive_workers:
 					return
+		return True
 
-		self.send_buffer_count = defaultdict(int)
-		self.receive_buffer_count = defaultdict(int)
-		self.buffer_count_received = defaultdict(int)
-
-		self.vertex_to_messages = defaultdict(list)
-		for v in self.vertices:
-			self.vertex_to_messages[v] = self.vertex_to_messages_next[v]+self.vertex_to_messages_remote_next[v]
-
-		self.vertex_to_messages_next = defaultdict(list)
-		self.vertex_to_messages_remote_next = defaultdict(list)
-		self.all_halt = all(len(m)==0 for m in self.vertex_to_messages.values())
-		self.superstep += 1
+	def checkpt_file(self, superstep):
+		file_name = checkpt_file_name(self.machine_ix, superstep)
+		message_file_name = checkpt_message_file_name(self.machine_ix, superstep)
+		self.load_to_file(file_name)
+		self.load_messages_to_file(message_file_name)
+		dfsWrapper(self.dfs.putFile, file_name)
+		dfsWrapper(self.dfs.putFile, message_file_name)
+		print('File '+ file_name +' successfully saved')
+		print('File '+ message_file_name +' successfully saved')
 
 
-		if checkpt:
-			file_name = checkpt_file_name(self.machine_ix, superstep)
-			self.load_to_file(file_name)
-			dfsWrapper(self.dfs.putFile, file_name)
-			print('File '+file_name+' successfully save')
-
-		assert(len(self.vertex_to_messages_next) == 0)
-		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
-
-		if (self.local_global[1] == 0):
-			print('No vertex processed')
-		else:
-			print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
-
+	def reply_finished_compute(self):
 		try:
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.connect((self.addr, self.master_port))
@@ -325,5 +332,34 @@ class Worker(object):
 		except:
 			pass
 
+	def compute(self, superstep, checkpt):
+		print '\nCompute for Superstep {}'.format(superstep)
+		start_time = time.time()
+		assert(self.superstep == superstep-1)
+
+		self.compute_each_vertex(superstep)
+		self.send_checksum_info()
+		print 'All messages sent after {} seconds'.format(time.time()-start_time)
+
+		if self.wait_for_all_messages()!=True:
+			print('clean up for Superstep {}'.format(superstep))
+			return
+
+		self.reinit_vars()
+		self.superstep += 1
+
+		if checkpt:
+			self.checkpt_file(superstep)
+			
+		assert(len(self.vertex_to_messages_next) == 0)
+		print 'Compute finishes after {} seconds'.format(time.time()-start_time)
+
+		if (self.local_global[1] == 0):
+			print('No vertex processed')
+		else:
+			print('local_global ratio: {}'.format(1.0*self.local_global[0]/self.local_global[1]))
+
+		
+		self.reply_finished_compute()
 		
 
