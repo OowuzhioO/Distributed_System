@@ -57,7 +57,7 @@ def collect_vertices_info(file_edges, file_values, file_messages, vertices_info)
 		edge_info = edge_lines[i].split()
 		value_info = value_lines[i+1].split()
 		message_info = message_lines[i+1].split()
-		assert(edge_info[0] == value_info[0] == message_info)
+		assert(edge_info[0] == value_info[0] == message_info[0])
 		edges = edge_info[1:]
 		value = value_info[1]
 		messages = message_info[1:]
