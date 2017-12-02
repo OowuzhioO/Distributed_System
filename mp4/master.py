@@ -72,10 +72,19 @@ class Master:
 			self.preprocess()
 
 	def regain_info(self):
+		sleep(0.5)
+		self.server_task = Thread(target=self.background_server)
+		self.server_task.daemon = True
+		self.server_task.start()
+
 		self.all_done = []
-		for worker in self.alive_workers:
-			sock = self.send_to_worker([Commons.new_master], worker)
-			superstep, halt = receive_all_decrypted(sock)
+		for worker in list(self.alive_workers):
+			try:
+				sock = self.send_to_worker([Commons.new_master], worker)
+				superstep, halt = receive_all_decrypted(sock)
+			except:
+				self.alive_workers.remove(worker)
+				continue
 			assert(self.superstep==0 or self.superstep==superstep)
 			self.superstep = superstep
 			self.all_done.append(halt)
@@ -182,7 +191,6 @@ class Master:
 			pass
 
 		for worker in self.alive_workers:
-			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([Commons.end_now], worker)
 
 	def collect_results(self):
@@ -191,7 +199,6 @@ class Master:
 		for ix in range(self.num_workers):
 			worker = self.alive_workers[ix]
 			self.result_files[ix] = 'file_piece_'+str(ix)+'_out'
-			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.send_to_worker([Commons.request_result, self.result_files[ix]], worker)
 
 		while (self.num_process_done < self.num_workers):
