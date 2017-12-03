@@ -24,6 +24,7 @@ class Driver(object):
 		self.message_input = 'User has already inputted'
 		self.message_output = 'I am done with processing file'
 		self.message_fail = 'Some worker failed'
+		self.message_congrats = 'Congrats! you are the new master'
 		self.messageInterval = messageInterval
 		self.result_file = result_file
 		self.worker_buffer_size = buffer_size
@@ -52,6 +53,11 @@ class Driver(object):
 
 		self.server_task = Process(target=self.background_server, args=(queue,))
 		self.server_task.start()
+
+		self.alive_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.alive_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		self.alive_sock.bind((self.host, self.alive_port))
+		self.alive_sock.listen(10)
 
 		self.alive_task = Process(target=self.Im_alive)
 		self.alive_task.daemon = True
@@ -132,6 +138,7 @@ class Driver(object):
 				self.role = 'worker'
 
 			queue.put((self.app_file, self.app_args, self.filename_pair, self.role, addr[0], self.masters_workers, self.is_undirected))
+			return
 
 
 		elif message == self.message_output: # for client and standby
@@ -140,11 +147,13 @@ class Driver(object):
 				assert(filename == self.result_file)
 				print 'Task done, result is published to {}'.format(filename)
 
+		elif message == self.message_congrats:
+			print('Hehe, now it is my turn')
+			self.role = 'master'
+
+		queue.put(self.role)
+
 	def Im_alive(self):
-		self.alive_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.alive_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.alive_sock.bind((self.host, self.alive_port))
-		self.alive_sock.listen(5)
 		while True:
 			self.alive_sock.accept()
 
@@ -190,8 +199,14 @@ class Driver(object):
 
 	def start_as_standby(self):
 		# wait for either master fail or receiving a finished signal
-		self.server_task = Process(target=self.background_server, args=(None,))
-		self.server_task.start() 
+		queue = Queue()
+		self.server_task = Process(target=self.background_server, args=(queue,))
+		self.server_task.start()
+		self.role = queue.get()
+		if (self.role == 'master'):
+			self.masters_workers[0:2] = self.masters_workers[1::-1]
+			self.init_master(True)
+			self.master.execute()
 
 	def really_failed(self, failed_process):
 		try:
@@ -206,7 +221,6 @@ class Driver(object):
 	def onProcessFail(self, failed_process):
 		failed_process = failed_process.split('_')[0]
 		failed_ip = socket.gethostbyname(failed_process)
-		
 
 		if self.role == 'master' and failed_ip in self.masters_workers[2:]:
 			print('One of the workers {} has left...'.format(failed_process))
@@ -217,11 +231,10 @@ class Driver(object):
 			
 
 		elif self.role == 'standby' and failed_ip == self.masters_workers[0]:
-			print('Hehe, now it is my turn')
-			self.role = 'master'
-			self.masters_workers[0:2] = self.masters_workers[1::-1]
-			self.init_master(True)
-			self.master.execute()
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((self.host, self.port))
+			send_all_encrypted(sock, self.message_congrats)
+			send_all_encrypted(sock, failed_ip)
 
 
 
@@ -236,7 +249,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--buffer_size",'-b', type=int, default='30')
+	parser.add_argument("--buffer_size",'-b', type=int, default='60')
 	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()
