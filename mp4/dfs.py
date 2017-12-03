@@ -173,7 +173,7 @@ class distributed_file_system(object):
 
 	# Below are 3 main function for accessing/modifying DFS: put/get/delete
 
-	def putFile(self, filename, conflict = False):
+	def putFile(self, filename, conflict = True):
 		if (filename in self.global_file_info):
 			# broadcast to that group
 			last_update_time, owner_nodes = self.global_file_info[filename]

@@ -22,7 +22,8 @@ def dfsWrapper(dfs_opt, filename):
 	try:
 		result = dfs_opt(filename)
 		if result == False or result == None:
-			raise Exception('error in result')
+			raise Exception('error in dfs operations')
 	except Exception as e:
+		print(e)
 		sleep(1)
 		dfsWrapper(dfs_opt, filename)

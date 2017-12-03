@@ -292,6 +292,7 @@ class Worker(object):
 			pass #forfeit the current compute
 
 	def wait_for_all_messages(self):
+		print('......... Waiting .............')
 		saved_alive_workers = list(self.alive_workers)
 		for rmt_host in saved_alive_workers:
 			if rmt_host != self.host:
@@ -307,6 +308,7 @@ class Worker(object):
 						return
 				if saved_alive_workers != self.alive_workers:
 					return
+		print('......... Cameback.............')
 		return True
 
 	def checkpt_file(self, superstep):
