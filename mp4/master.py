@@ -8,9 +8,7 @@ from commons import Commons, dfsWrapper, checkpt_file_name, checkpt_message_file
 
 class Master:
 
-	def __init__(self, memblist, task_id, filename_pair, masters_workers, host_name, port_info, client_info, dfs, is_standby):
-		self.memblist = memblist
-		self.task_id = task_id
+	def __init__(self, filename_pair, masters_workers, host_name, port_info, client_info, dfs, is_standby):
 		self.input_filename, self.output_filename = filename_pair
 		self.masters_workers = masters_workers
 		self.alive_workers = masters_workers[2:]

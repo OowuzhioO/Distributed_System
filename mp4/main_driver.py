@@ -33,8 +33,8 @@ class Driver(object):
 		self.role = 'unknown'
 		self.master = None # make sense only if role == 'master'
 		self.filename_pair = [None, None]
-		self.task_id = -1	 # 0 for PR or 1 for SP
-		self.key_number = -1 # num_iterations for PR or source for SP
+		self.app_file = -1
+		self.app_args = -1
 
 	def drive(self):
 		newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
@@ -57,7 +57,7 @@ class Driver(object):
 		self.alive_task.daemon = True
 		self.alive_task.start()
 
-		self.task_id, self.key_number, self.filename_pair, self.role, self.client_ip, self.masters_workers, self.is_undirected = queue.get()
+		self.app_file, self.app_args, self.filename_pair, self.role, self.client_ip, self.masters_workers, self.is_undirected = queue.get()
 
 		if (self.role == 'client'):
 			self.start_as_client()
@@ -78,37 +78,25 @@ class Driver(object):
 		os.system('ls')
 		print 
 
-		input_ready = False
-		while(not input_ready):
+		while(True):
+
 			try:
-				task_id, filename, key_number = raw_input('Input task_id filename key_number, or enter help: ').strip().split()
-				task_id = int(task_id)
-				key_number = int(key_number)
+				argv = raw_input('Input graph_file app_file app_args, or enter help: ').strip().split()
+				graph_file, app_file = argv[:2] 
+				app_args = argv[2:]
+
 			except:
-				print 'Input should be in this format for PR:	0 file num_iterations'
-				print 'Or in this format for SP:		1 file source_vertex'
+				print 'Example input: com-amazon.ungraph.txt pr_vertex.py 20'
 				continue
 
-			if (task_id > 1) or (task_id < 0):
-				print 'task_id not in range 0 to 1 (0-PR, 1-SP)'
-				continue
+			for filename in (graph_file, app_file):
+				if os.path.exists(filename):
+					print 'File {} does not exist'.format(filename)
+					continue
 
-			elif not os.path.exists(filename):
-				print 'File does not exist'
-				continue
+			break
 
-			elif (task_id == 0) and (key_number > 100):
-				print 'Number iterations can not be greater than 100'
-				continue
-
-			elif (key_number <= 0):
-				print 'key_number must be positive.'
-				continue
-
-			else:
-				input_ready = True
-
-		queue.put((task_id, key_number, (filename, self.result_file), 'client', self.host, None, self.is_undirected))
+		queue.put((app_file, app_args, (graph_file, self.result_file), 'client', self.host, None, self.is_undirected))
 
 	def background_server(self, queue):
 		conn, addr = self.server_sock.accept()				
@@ -120,8 +108,8 @@ class Driver(object):
 			self.input_task.terminate()
 			print
 
-			self.task_id = receive_all_decrypted(conn)
-			self.key_number = receive_all_decrypted(conn)
+			self.app_file , _ = receive_all_to_target(conn, self.messageInterval)
+			self.app_args = receive_all_decrypted(conn)
 			self.masters_workers = receive_all_decrypted(conn)
 			self.is_undirected = receive_all_decrypted(conn)
 			
@@ -131,14 +119,14 @@ class Driver(object):
 				self.filename_pair[1] = receive_all_decrypted(conn)
 				
 
-			elif self.host == self.masters_workers[1]:
+			if self.host == self.masters_workers[1]:
 				self.role = 'standby'
 				print 'I am the standby master!'
 
 			else:
 				self.role = 'worker'
 
-			queue.put((self.task_id, self.key_number, self.filename_pair, self.role, addr[0], self.masters_workers, self.is_undirected))
+			queue.put((self.app_file, self.app_args, self.filename_pair, self.role, addr[0], self.masters_workers, self.is_undirected))
 
 
 		elif message == self.message_output: # for client and standby
@@ -168,8 +156,8 @@ class Driver(object):
 			sock.connect((host, self.port))
 
 			send_all_encrypted(sock, self.message_input)
-			send_all_encrypted(sock, self.task_id)
-			send_all_encrypted(sock, self.key_number)
+			send_all_from_file(sock, self.app_file, self.messageInterval)
+			send_all_encrypted(sock, self.app_args)
 			send_all_encrypted(sock, self.masters_workers)
 			send_all_encrypted(sock, self.is_undirected)
 			if host in self.masters_workers[0:2]:
@@ -177,8 +165,8 @@ class Driver(object):
 				send_all_encrypted(sock, self.filename_pair[1])
 
 	def init_master(self, standby):
-		self.master = Master(self.membList, self.task_id, self.filename_pair, self.masters_workers, 
-							self.host_name, (self.master_port, self.worker_port, self.port),
+		self.master = Master(self.filename_pair, self.masters_workers, self.host_name, 
+							(self.master_port, self.worker_port, self.port),
 							(self.client_ip, self.message_output, self.message_fail), 
 							self.dfs, standby)
 
@@ -190,8 +178,8 @@ class Driver(object):
 
 	def start_as_worker(self):
 		print 'I am the worker!'
-		self.worker = Worker(self.task_id, self.host_name, (self.master_port, self.worker_port), 
-							self.masters_workers, self.key_number, self.dfs, self.worker_buffer_size, self.is_undirected)
+		self.worker = Worker(self.app_file, self.host_name, (self.master_port, self.worker_port), 
+							self.masters_workers, self.app_args, self.dfs, self.worker_buffer_size, self.is_undirected)
 		self.worker.start_main_server()
 
 
@@ -243,7 +231,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--buffer_size",'-b', type=int, default='100')
+	parser.add_argument("--buffer_size",'-b', type=int, default='30')
 	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()

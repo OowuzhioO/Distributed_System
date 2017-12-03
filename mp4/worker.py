@@ -1,4 +1,3 @@
-from vertex import PRVertex, SPVertex
 from message import send_all_encrypted, receive_all_decrypted
 import threading
 import json 
@@ -11,20 +10,20 @@ from parser import collect_vertices_info
 class Worker(object):
 	# host_name: hostname of machine
 	# port_info: (master_port, worker_port)
-	# task_id:  0 for pagerank and 1 for shortest path
 	# masters_workers: master, standby, and workers in order
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, task_id, host_name, port_info, masters_workers, key_number, dfs, buffer_size, is_undirected):
+	def __init__(self, app_file, host_name, port_info, masters_workers, app_args, dfs, buffer_size, is_undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port = port_info
-		self.task_id = task_id 
-		self.key_number = key_number
+		self.app_file = app_file 
+		self.app_args = app_args
 		self.dfs = dfs
 		self.vertices = {}
-		self.targetVertex = PRVertex if (task_id==0) else SPVertex
+		module = __import__(self.app_file)
+		self.targetVertex = module.AppVertex
 
 		self.masters_workers = masters_workers
 		self.alive_workers = masters_workers[2:]
@@ -55,7 +54,7 @@ class Worker(object):
 	def init_vertex(self, u):
 		if u not in self.vertices:
 			self.vertices[u] = self.targetVertex (u, [],
-				self.vertex_send_messages_to,self.vertex_edge_weight, self.key_number, self.num_vertices)
+				self.vertex_send_messages_to, self.vertex_edge_weight, self.app_args, self.num_vertices)
 
 	def preprocess(self, filename):
 		with open(filename, 'r') as input_file:
@@ -94,14 +93,12 @@ class Worker(object):
 	def queue_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_next[vertex].append(value)
-		if self.task_id == 1:
-			self.vertex_to_messages_next[vertex] = [min(self.vertex_to_messages_next[vertex])]
+		self.targetVertex.combine(self.vertex_to_messages_next[vertex])
 
 	def queue_remote_message(self, vertex, value, superstep):
 		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_remote_next[vertex].append(value)
-		if self.task_id == 1:
-			self.vertex_to_messages_remote_next[vertex] = [min(self.vertex_to_messages_remote_next[vertex])]
+		self.targetVertex.combine(self.vertex_to_messages_remote_next[vertex])
 
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:
@@ -253,7 +250,8 @@ class Worker(object):
 	def compute_each_vertex(self, superstep):
 		for v in self.vertices:
 			messages = self.vertex_to_messages[v]
-			if self.task_id==0 and self.first_len_message[v] != len(messages) and superstep > 1:
+			# for debug only!!!
+			if self.app_file=='pr_vertex.py' and self.first_len_message[v] != len(messages) and superstep > 1:
 				print 'error occurs: {},{},{}'.format(v, self.first_len_message[v], len(messages))
 				sys.exit()
 
