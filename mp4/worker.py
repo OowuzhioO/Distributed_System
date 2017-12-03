@@ -244,10 +244,12 @@ class Worker(object):
 		self.local_global[1] += 1
 
 
+
 	def vertex_edge_weight(self, neighbor):
 		return neighbor[1]
 
-	def compute_selected_vertex(self, thread_ix):
+
+	def compute_selected_vertex(self, thread_ix, superstep):
 		start_ix = len(self.vertices)*thread_ix/self.num_threads 
 		end_ix = len(self.vertices)*(thread_ix+1)/self.num_threads
 		 
@@ -269,7 +271,7 @@ class Worker(object):
 
 		for thread_ix in range(self.num_threads):
 			threads[thread_ix] = threading.Thread(
-				target=self.compute_selected_vertex, args=(thread_ix,))
+				target=self.compute_selected_vertex, args=(thread_ix,superstep))
 			threads[thread_ix].start()
 
 		for thread_ix in range(self.num_threads):
