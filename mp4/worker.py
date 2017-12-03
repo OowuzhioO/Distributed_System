@@ -170,7 +170,7 @@ class Worker(object):
 		send_all_encrypted(sock, [self.superstep, self.all_halt])
 
 
-	def new_thread_queue(self, received_params):
+	def new_thread_queue(self, received_params, addr):
 		for params in received_params:
 			self.queue_remote_message(*params)
 		self.buffer_count_received[addr[0]] += 1
@@ -203,7 +203,7 @@ class Worker(object):
 					sys.exit()
 
 				elif message == None: # for inner vertex communication
-					threading.Thread(target=self.new_thread_queue, args=(receive_all_decrypted(conn),)).start()
+					threading.Thread(target=self.new_thread_queue, args=(receive_all_decrypted(conn),addr)).start()
 
 				elif message == 'buffer_count':
 					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
