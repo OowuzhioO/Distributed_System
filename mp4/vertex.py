@@ -32,7 +32,7 @@ class PRVertex(Vertex):
 
 		if (super_step < self.num_iterations) and len(self.neighbors) != 0:
 			self.send_to_all_neighbors(self.value/len(self.neighbors), super_step)
-		else if super_step >= self.num_iterations:
+		elif super_step >= self.num_iterations:
 			self.vote_to_halt()
 
 # Shortest path Vertex, same function declaration as PRVertex
