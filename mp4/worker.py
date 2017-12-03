@@ -251,7 +251,7 @@ class Worker(object):
 		start_ix = len(self.vertices)*thread_ix/self.num_threads 
 		end_ix = len(self.vertices)*(thread_ix+1)/self.num_threads
 		 
-		for v in self.vertices[start_ix: end_ix]:
+		for v in self.sorted_vertices[start_ix: end_ix]:
 			messages = self.vertex_to_messages[v]
 			# for debug only!!!
 			if self.app_file=='pr_vertex.py' and self.first_len_message[v] != len(messages) and superstep > 1:
