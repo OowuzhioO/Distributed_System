@@ -99,11 +99,9 @@ class Master:
 		self.v_to_m_dict, self.num_vertices = parse_file(self.input_filename, self.num_workers, self.masters_workers)
 		print('num_vertices: ', self.num_vertices)
 
-		dfsWrapper(self.dfs.putFile, self.input_filename)
-		sleep(1.5)
-
 		for ix in range(self.num_workers):
-			self.send_to_worker([Commons.request_preprocess,self.input_filename, self.v_to_m_dict, self.num_vertices], self.masters_workers[ix+2])
+			sock = self.send_to_worker([Commons.request_preprocess,self.input_filename, self.v_to_m_dict, self.num_vertices], self.masters_workers[ix+2])
+			send_all_from_file(sock, self.input_filename, 0.001)
 
 		while (self.num_preprocess_done < self.num_workers):
 			sleep(1)

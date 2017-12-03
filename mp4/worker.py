@@ -1,4 +1,4 @@
-from message import send_all_encrypted, receive_all_decrypted
+from message import send_all_encrypted, receive_all_decrypted, receive_all_to_target
 import threading
 import json 
 import sys, time 
@@ -119,7 +119,7 @@ class Worker(object):
 		print('receive command to load file')
 		self.addr = addr[0]
 		self.input_filename, self.v_to_m_dict, self.num_vertices = receive_all_decrypted(conn)
-		dfsWrapper(self.dfs.getFile, self.input_filename)
+		self.input_filename, _ = receive_all_to_target(conn, 0.001)
 		self.preprocess(self.input_filename)
 		print('preprocess done after {} seconds'.format(time.time()-start_time))
 

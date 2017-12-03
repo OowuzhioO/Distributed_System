@@ -236,7 +236,7 @@ if __name__ == '__main__':
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--buffer_size",'-b', type=int, default='30')
+	parser.add_argument("--buffer_size",'-b', type=int, default='250')
 	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()
