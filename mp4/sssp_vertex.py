@@ -1,4 +1,4 @@
-from vertex.py import Vertex
+from vertex import Vertex
 
 # Shortest path Vertex, same function declaration as PRVertex
 class AppVertex(Vertex):

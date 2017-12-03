@@ -1,8 +1,7 @@
-from vertex.py import Vertex
+from vertex import Vertex
 
 # Page rank Vertex 
 class AppVertex(Vertex):
-
 	# compute at each super_step
 	# messages are basically values
 	def compute(self, messages, super_step):

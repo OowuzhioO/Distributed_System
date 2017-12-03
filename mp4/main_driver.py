@@ -78,7 +78,9 @@ class Driver(object):
 		os.system('ls')
 		print 
 
-		while(True):
+		self.input_ready = False
+		while(not self.input_ready):
+			self.input_ready = True
 
 			try:
 				argv = raw_input('Input graph_file app_file app_args, or enter help: ').strip().split()
@@ -87,14 +89,14 @@ class Driver(object):
 
 			except:
 				print 'Example input: com-amazon.ungraph.txt pr_vertex.py 20'
+				self.input_ready = False
 				continue
 
 			for filename in (graph_file, app_file):
-				if os.path.exists(filename):
+				if not os.path.exists(filename):
 					print 'File {} does not exist'.format(filename)
-					continue
-
-			break
+					self.input_ready = False
+					
 
 		queue.put((app_file, app_args, (graph_file, self.result_file), 'client', self.host, None, self.is_undirected))
 
