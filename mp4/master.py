@@ -63,6 +63,12 @@ class Master:
 			elif message == self.fail_message:
 				self.failures.append(receive_all_decrypted(conn))
 
+			elif message == Commons.new_master:
+				superstep, halt = receive_all_decrypted(sock)
+				assert(self.superstep==0 or self.superstep==superstep)
+				self.superstep = superstep
+				self.all_done.append(halt)
+
 	def initialize(self):
 		if self.is_standby:
 			self.regain_info()
@@ -79,13 +85,12 @@ class Master:
 		for worker in list(self.alive_workers):
 			try:
 				sock = self.send_to_worker([Commons.new_master], worker)
-				superstep, halt = receive_all_decrypted(sock)
 			except:
 				self.alive_workers.remove(worker)
 				continue
-			assert(self.superstep==0 or self.superstep==superstep)
-			self.superstep = superstep
-			self.all_done.append(halt)
+		
+		while len(self.all_done) < len(self.alive_workers):
+			sleep(0.5)
 		self.all_done = all(self.all_done)
 
 

@@ -21,7 +21,4 @@ class AppVertex(Vertex):
 
 	@staticmethod
 	def combine(messages):
-		min_message = min(messages) 
-		for ix in reversed(range(len(messages))):
-			if (messages[ix] != min_message):
-				messages.pop(ix)
+		return [min(messages)]

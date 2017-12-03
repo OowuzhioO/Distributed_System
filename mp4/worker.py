@@ -91,14 +91,10 @@ class Worker(object):
 				
 
 	def queue_message(self, vertex, value, superstep):
-		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_next[vertex].append(value)
-		self.targetVertex.combine(self.vertex_to_messages_next[vertex])
 
 	def queue_remote_message(self, vertex, value, superstep):
-		assert(self.superstep == superstep-1)
 		self.vertex_to_messages_remote_next[vertex].append(value)
-		self.targetVertex.combine(self.vertex_to_messages_remote_next[vertex])
 
 	def load_to_file(self, filename):
 		with open(filename, 'w') as f:
@@ -165,6 +161,14 @@ class Worker(object):
 		print('Now we have {} vertices~'.format(len(self.sorted_vertices)))
 
 
+	def new_master(self, addr):
+		self.curr_thread.join()
+		self.addr = addr[0]
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((self.addr, self.master_port))
+		send_all_encrypted(sock, Commons.new_master)
+		send_all_encrypted(conn, [self.superstep, self.all_halt])
+
 	def start_main_server(self):
 		print('I am worker No.{}!'.format(self.machine_ix))
 		self.monitor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -201,9 +205,7 @@ class Worker(object):
 					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
 
 				if message == Commons.new_master:
-					self.curr_thread.join()
-					self.addr = addr[0]
-					send_all_encrypted(conn, [self.superstep, self.all_halt])
+					threading.Thread(target=self.new_master, args=(addr,)).start()
 
 				elif message == Commons.work_change:
 					self.change_work(conn, addr)
@@ -234,8 +236,6 @@ class Worker(object):
 		data = (neighbor[0], value, superstep)
 		if neighbor[2] != self.host:
 			rmt_host = neighbor[2]
-			if len(self.remote_message_buffer[rmt_host]) > self.max_buffer_size:
-				self.send_and_clear_buffer(rmt_host)
 			self.remote_message_buffer[rmt_host].append(data)
 		else:
 			self.queue_message(*data)
@@ -247,8 +247,11 @@ class Worker(object):
 	def vertex_edge_weight(self, neighbor):
 		return neighbor[1]
 
-	def compute_each_vertex(self, superstep):
-		for v in self.vertices:
+	def compute_selected_vertex(self, thread_ix):
+		start_ix = len(self.vertices)*thread_ix/self.num_threads 
+		end_ix = len(self.vertices)*(thread_ix+1)/self.num_threads
+		 
+		for v in self.vertices[start_ix: end_ix]:
 			messages = self.vertex_to_messages[v]
 			# for debug only!!!
 			if self.app_file=='pr_vertex.py' and self.first_len_message[v] != len(messages) and superstep > 1:
@@ -259,6 +262,18 @@ class Worker(object):
 
 			if not vertex.halt or len(messages)!=0:
 				self.vertices[v].compute(messages, superstep)
+
+
+	def compute_each_vertex(self, superstep):
+		threads = [None]*self.num_threads
+
+		for thread_ix in range(self.num_threads):
+			threads[thread_ix] = threading.Thread(
+				target=self.compute_selected_vertex, args=(thread_ix,))
+			threads[thread_ix].start()
+
+		for thread_ix in range(self.num_threads):
+			threads[thread_ix].join()
 
 		for host in self.remote_message_buffer:
 			self.send_and_clear_buffer(host)
@@ -347,6 +362,8 @@ class Worker(object):
 			return
 
 		self.reinit_vars()
+		for vertex in self.vertices:
+			self.vertex_to_messages_next[vertex] = self.targetVertex.combine(self.vertex_to_messages_next[vertex])
 		self.superstep += 1
 
 		if checkpt:
