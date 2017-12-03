@@ -167,7 +167,13 @@ class Worker(object):
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.addr, self.master_port))
 		send_all_encrypted(sock, Commons.new_master)
-		send_all_encrypted(conn, [self.superstep, self.all_halt])
+		send_all_encrypted(sock, [self.superstep, self.all_halt])
+
+
+	def new_thread_queue(self, received_params):
+		for params in received_params:
+			self.queue_remote_message(*params)
+		self.buffer_count_received[addr[0]] += 1
 
 	def start_main_server(self):
 		print('I am worker No.{}!'.format(self.machine_ix))
@@ -197,9 +203,7 @@ class Worker(object):
 					sys.exit()
 
 				elif message == None: # for inner vertex communication
-					for params in receive_all_decrypted(conn):
-						self.queue_remote_message(*params)
-					self.buffer_count_received[addr[0]] += 1
+					threading.Thread(target=self.new_thread_queue, args=(receive_all_decrypted(conn),)).start()
 
 				elif message == 'buffer_count':
 					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)

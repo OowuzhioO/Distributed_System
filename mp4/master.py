@@ -64,7 +64,7 @@ class Master:
 				self.failures.append(receive_all_decrypted(conn))
 
 			elif message == Commons.new_master:
-				superstep, halt = receive_all_decrypted(sock)
+				superstep, halt = receive_all_decrypted(conn)
 				assert(self.superstep==0 or self.superstep==superstep)
 				self.superstep = superstep
 				self.all_done.append(halt)
@@ -126,7 +126,7 @@ class Master:
 
 	def process_failure(self):
 		sleep(2)
-		self.superstep -= 1
+		self.superstep -= 2
 		if (self.superstep%2 == 0):
 			self.superstep -= 1
 
@@ -175,11 +175,12 @@ class Master:
 			if len(self.failures) == 0:
 				self.all_done = all(self.all_done)
 				time_elapsed = time()-start_time
-				print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 			else:
 				if self.process_failure()==True:
 					print('Recovered from worker failure, now at superstep {}'.format(self.superstep))
 				self.failures = []
+
+			print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 				
 
 
