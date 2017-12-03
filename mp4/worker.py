@@ -363,7 +363,7 @@ class Worker(object):
 
 		self.reinit_vars()
 		for vertex in self.vertices:
-			self.vertex_to_messages_next[vertex] = self.targetVertex.combine(self.vertex_to_messages_next[vertex])
+			self.vertex_to_messages[vertex] = self.targetVertex.combine(self.vertex_to_messages[vertex])
 		self.superstep += 1
 
 		if checkpt:
