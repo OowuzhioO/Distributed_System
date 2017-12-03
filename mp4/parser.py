@@ -38,7 +38,7 @@ def combine_files(output_filename, collected_files):
 				unsorted_pairs.append((int(x), float(y)))
 		
 	with open(output_filename, 'w') as output_file:
-		for x,y in sorted(unsorted_pairs):
+		for x,y in sorted(unsorted_pairs, key=lambda x:-x[1]):
 			output_file.write('{} {}\n'.format(x,y))
 
 	assert(len(set(supersteps)) <= 1)
