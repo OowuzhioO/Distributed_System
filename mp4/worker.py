@@ -14,7 +14,7 @@ class Worker(object):
 	# source_vertex: for shortest path
 	# commons: information shared between Master and Worker
 	
-	def __init__(self, app_file, host_name, port_info, masters_workers, app_args, dfs, buffer_size, is_undirected):
+	def __init__(self, app_file, host_name, port_info, masters_workers, app_args, dfs, num_threads, is_undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.master_port, self.worker_port = port_info
@@ -35,7 +35,7 @@ class Worker(object):
 		self.vertex_to_messages_remote_next = defaultdict(list)
 
 		self.remote_message_buffer = defaultdict(list) # key are hosts, vals are params
-		self.max_buffer_size = buffer_size
+		self.num_threads = num_threads
 		self.is_undirected = is_undirected
 
 		# for debugging
