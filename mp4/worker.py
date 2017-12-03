@@ -203,7 +203,7 @@ class Worker(object):
 					sys.exit()
 
 				elif message == None: # for inner vertex communication
-					threading.Thread(target=self.new_thread_queue, args=(receive_all_decrypted(conn),addr)).start()
+					self.new_thread_queue(receive_all_decrypted(conn),addr)
 
 				elif message == 'buffer_count':
 					self.receive_buffer_count[addr[0]] = receive_all_decrypted(conn)
