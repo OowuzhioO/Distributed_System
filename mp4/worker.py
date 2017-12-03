@@ -22,7 +22,7 @@ class Worker(object):
 		self.app_args = app_args
 		self.dfs = dfs
 		self.vertices = {}
-		module = __import__(self.app_file)
+		module = __import__(self.app_file[:-3])
 		self.targetVertex = module.AppVertex
 
 		self.masters_workers = masters_workers

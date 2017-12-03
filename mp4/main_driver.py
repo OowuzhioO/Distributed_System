@@ -96,6 +96,10 @@ class Driver(object):
 				if not os.path.exists(filename):
 					print 'File {} does not exist'.format(filename)
 					self.input_ready = False
+
+			if len(app_file) < 4 or app_file[-3:]!='.py':
+				print 'Application file must be a python file'
+				self.input_ready = False
 					
 
 		queue.put((app_file, app_args, (graph_file, self.result_file), 'client', self.host, None, self.is_undirected))
