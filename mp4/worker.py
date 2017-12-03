@@ -75,8 +75,9 @@ class Worker(object):
 					if self.is_undirected:
 						self.vertices[v].neighbors.append([u, 1, self.gethost(u)])
 					self.first_len_message[v] += 1
-			self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
 
+		self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
+		print('Now we have {} vertices~'.format(len(self.sorted_vertices)))
 		file_name = checkpt_file_name(self.machine_ix, 0)
 
 		with open(file_name, 'w') as checkpt_f:
@@ -164,6 +165,7 @@ class Worker(object):
 			self.vertex_to_messages[v] = map(float, messages)
 
 		self.sorted_vertices = map(str,sorted(map(int,self.vertices.keys())))
+		print('Now we have {} vertices~'.format(len(self.sorted_vertices)))
 
 
 	def start_main_server(self):
@@ -222,10 +224,9 @@ class Worker(object):
 			sock.connect((rmt_host, self.worker_port))
 			send_all_encrypted(sock, None)
 			send_all_encrypted(sock, self.remote_message_buffer[rmt_host])
-		except KeyboardInterrupt:
-			raise		
-		except:
+		except (socket.error, ValueError) as e:
 			pass
+
 		self.remote_message_buffer[rmt_host] = []
 		self.send_buffer_count[rmt_host] += 1
 
@@ -258,10 +259,7 @@ class Worker(object):
 
 			vertex = self.vertices[v]
 
-			if self.task_id==0 and not vertex.halt:
-				self.vertices[v].compute(messages, superstep)
-
-			if self.task_id==1 and (not vertex.halt or len(messages)!=0):
+			if not vertex.halt or len(messages)!=0:
 				self.vertices[v].compute(messages, superstep)
 
 		for host in self.remote_message_buffer:
@@ -296,19 +294,20 @@ class Worker(object):
 			pass #forfeit the current compute
 
 	def wait_for_all_messages(self):
-		for rmt_host in self.alive_workers:
+		saved_alive_workers = list(self.alive_workers)
+		for rmt_host in saved_alive_workers:
 			if rmt_host != self.host:
 				while rmt_host not in self.receive_buffer_count:
 					time.sleep(1) 
-					if rmt_host not in self.alive_workers:
+					if saved_alive_workers != self.alive_workers:
 						return
-				if rmt_host not in self.alive_workers:
+				if saved_alive_workers != self.alive_workers:
 					return
 				while self.receive_buffer_count[rmt_host] != self.buffer_count_received[rmt_host]:
 					time.sleep(1)
-					if rmt_host not in self.alive_workers:
+					if saved_alive_workers != self.alive_workers:
 						return
-				if rmt_host not in self.alive_workers:
+				if saved_alive_workers != self.alive_workers:
 					return
 		return True
 

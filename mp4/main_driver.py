@@ -125,7 +125,7 @@ class Driver(object):
 			self.masters_workers = receive_all_decrypted(conn)
 			self.is_undirected = receive_all_decrypted(conn)
 			
-			if self.host == self.masters_workers[0]:
+			if self.host in self.masters_workers[0:2]:
 				self.role = 'master'
 				self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
 				self.filename_pair[1] = receive_all_decrypted(conn)
@@ -172,7 +172,7 @@ class Driver(object):
 			send_all_encrypted(sock, self.key_number)
 			send_all_encrypted(sock, self.masters_workers)
 			send_all_encrypted(sock, self.is_undirected)
-			if host == self.masters_workers[0]:
+			if host in self.masters_workers[0:2]:
 				send_all_from_file(sock, self.filename_pair[0], self.messageInterval)
 				send_all_encrypted(sock, self.filename_pair[1])
 
