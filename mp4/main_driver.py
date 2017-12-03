@@ -124,10 +124,9 @@ class Driver(object):
 				self.filename_pair[0] , _ = receive_all_to_target(conn, self.messageInterval)
 				self.filename_pair[1] = receive_all_decrypted(conn)
 				
-
-			if self.host == self.masters_workers[1]:
-				self.role = 'standby'
-				print 'I am the standby master!'
+				if self.host == self.masters_workers[1]:
+					self.role = 'standby'
+					print 'I am the standby master!'
 
 			else:
 				self.role = 'worker'
