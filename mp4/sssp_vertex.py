@@ -21,4 +21,4 @@ class AppVertex(Vertex):
 
 	@staticmethod
 	def combine(messages):
-		return [min(messages)]
+		return [min(messages)] if len(messages)>0 else []
