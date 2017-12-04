@@ -23,4 +23,7 @@ Input graph_file app_file app_args, or enter help: com-amazon.ungraph.txt pr_ver
 ```
   
 There are also many flags provided, mainly for debugging purpose  
-Press Ctrl-C to simulate a failure
+
+Right after you input in one of the machines, that machine will be the client, and role will be assigned based on machine number for rest of machines.  
+At all time in your application, you need to at least keep 4 machines alive: 2 masters, 1 client and 1 worker.  
+The progress will be checkpointed, so 2 simultaneous worker failures can be allowed without restart. 
