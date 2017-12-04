@@ -248,7 +248,7 @@ if __name__ == '__main__':
 	parser.add_argument("--verbose", '-v', action='store_true')
 	parser.add_argument("--cleanLog", '-c', action='store_true')
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--num_threads",'-n', type=int, default='2')
+	parser.add_argument("--num_threads",'-n', type=int, default='4')
 	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()
