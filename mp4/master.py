@@ -125,13 +125,21 @@ class Master:
 			self.send_to_worker([Commons.work_change, self.superstep, self.alive_workers, self.split_vertices_info[i], self.v_to_m_dict], worker)
 
 	def process_failure(self):
+		for ix in reversed(range(len(self.failures))):
+			if self.failures[ix] not in self.alive_workers:
+				self.failures.pop(ix)
+
+		if len(self.failures) == 0:
+			return False
+
 		sleep(2)
 		self.superstep -= 2
 		if (self.superstep%2 == 0):
 			self.superstep -= 1
 
 		vertices_info = {}
-		for failed_process in self.failures:
+		for ix in reversed(range(len(self.failures))):
+			failed_process = self.failures.pop(ix)
 			if failed_process not in self.alive_workers:
 				continue
 			self.alive_workers.remove(failed_process)
@@ -178,7 +186,6 @@ class Master:
 			else:
 				if self.process_failure()==True:
 					print('Recovered from worker failure, now at superstep {}'.format(self.superstep))
-				self.failures = []
 
 			print('Superstep {} ended after {} seconds...'.format(self.superstep, time()-start_time))
 				
