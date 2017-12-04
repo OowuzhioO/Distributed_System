@@ -22,4 +22,4 @@ class Vertex:
 
 	@staticmethod
 	def combine(messages):
-		pass
+		return messages

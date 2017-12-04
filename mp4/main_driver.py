@@ -12,7 +12,7 @@ from worker import Worker
 from time import sleep
 
 class Driver(object):
-	def __init__(self, host_name, port, worker_port, alive_port, master_port, membList, dfs, messageInterval, result_file, buffer_size, undirected):
+	def __init__(self, host_name, port, worker_port, alive_port, master_port, membList, dfs, messageInterval, result_file, num_threads, undirected):
 		self.host_name = host_name
 		self.host = socket.gethostbyname(host_name)
 		self.port = port
@@ -27,7 +27,7 @@ class Driver(object):
 		self.message_congrats = 'Congrats! you are the new master'
 		self.messageInterval = messageInterval
 		self.result_file = result_file
-		self.worker_buffer_size = buffer_size
+		self.worker_num_threads = num_threads
 		self.is_undirected = undirected
 
 		self.client_ip = None
@@ -193,7 +193,7 @@ class Driver(object):
 	def start_as_worker(self):
 		print 'I am the worker!'
 		self.worker = Worker(self.app_file, self.host_name, (self.master_port, self.worker_port), 
-							self.masters_workers, self.app_args, self.dfs, self.worker_buffer_size, self.is_undirected)
+							self.masters_workers, self.app_args, self.dfs, self.worker_num_threads, self.is_undirected)
 		self.worker.start_main_server()
 
 
@@ -223,7 +223,7 @@ class Driver(object):
 		failed_ip = socket.gethostbyname(failed_process)
 
 		if self.role == 'master' and failed_ip in self.masters_workers[2:]:
-			print('One of the workers {} has left...'.format(failed_process))
+			#print('One of the workers {} has left...'.format(failed_process))
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.connect((self.host, self.master_port))
 			send_all_encrypted(sock, self.message_fail)
@@ -247,9 +247,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--verbose", '-v', action='store_true')
 	parser.add_argument("--cleanLog", '-c', action='store_true')
-	parser.add_argument("--messageInterval",'-i', type=float, default=0.001)
 	parser.add_argument("--output_file", '-o', type=str, default='processed_values.txt')
-	parser.add_argument("--buffer_size",'-b', type=int, default='125')
+	parser.add_argument("--num_threads",'-n', type=int, default='4')
 	parser.add_argument("--undirected", '-u', action='store_true')
 
 	args = parser.parse_args()
@@ -287,7 +286,7 @@ if __name__ == '__main__':
 							dfsPort=ports[1],
 							num_N=3,
 							randomthreshold = 0,
-							messageInterval = args.messageInterval)
+							messageInterval = 0.001)
 
 	monitor = threading.Thread(target=hbd.monitor)
 	monitor.daemon=True
@@ -296,7 +295,7 @@ if __name__ == '__main__':
 	hbd.joinGrp()
 
 	main_driver = Driver(socket.gethostname(), ports[2], ports[3], ports[4], ports[5], hbd.membList, hbd.file_sys, 
-						args.messageInterval, args.output_file, args.buffer_size, args.undirected)
+						0.001, args.output_file, args.num_threads, args.undirected)
 	hbd.really_failed = main_driver.really_failed 
 	hbd.fail_callback = main_driver.onProcessFail
 	
